@@ -16,7 +16,6 @@ import { allRoommates } from '../utils/roommateData'
 
 const sidebarCards = [
   { id:'match',   title:'Match Suggestions', description:'Get AI-powered roommate recommendations based on your preferences', image:'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&fit=crop', icon:SparklesIcon,   link:'/match-suggestions', color:'from-purple-500 to-pink-500' },
-  { id:'saved',   title:'Saved Profiles',    description:'View all the roommate profiles you have saved for later',           image:'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&fit=crop', icon:HeartIcon,      link:'/saved-roommates',   color:'from-red-500 to-orange-500' },
   { id:'safety',  title:'Safety Tips',       description:'Learn essential safety guidelines for sharing accommodation',        image:'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=400&fit=crop', icon:ShieldIcon,     link:'/roommate-safety',   color:'from-green-500 to-teal-500' },
   { id:'stories', title:'Success Stories',   description:'Read inspiring stories from people who found their perfect roommate',image:'https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=400&fit=crop', icon:TrophyIcon,     link:'/success-stories',   color:'from-yellow-500 to-orange-500' },
 ]

@@ -125,7 +125,12 @@ export function PostPropertyPage() {
       });
       localStorage.setItem('fm_admin_notifs', JSON.stringify(adminNotifs));
 
-      toast.success('Property submitted for admin review!');
+      toast.success('Property submitted for admin review!', {
+        style: {
+          background: '#2F7D5F',
+          color: 'white',
+        },
+      });
       navigate('/dashboard/owner');
     } catch (error: any) {
       console.error('Error submitting property:', error);

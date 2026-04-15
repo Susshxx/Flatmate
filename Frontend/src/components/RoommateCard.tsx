@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
-import { MapPinIcon, BriefcaseIcon, CalendarIcon, ShieldCheckIcon, MessageCircleIcon, HeartIcon } from 'lucide-react'
+import { MapPinIcon, BriefcaseIcon, CalendarIcon, ShieldCheckIcon, MessageCircleIcon } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 
@@ -25,13 +25,6 @@ export function RoommateCard({
   id, name, age, gender, occupation, budget, location,
   moveInDate, bio, tags = [], verified = false, image, onMessage,
 }: RoommateCardProps) {
-  const [liked, setLiked] = useState(false)
-
-  const handleLike = (e: React.MouseEvent) => {
-    e.preventDefault(); e.stopPropagation()
-    setLiked(v => !v)
-    toast.success(liked ? 'Removed from saved' : '❤️ Profile saved!')
-  }
 
   const handleMessage = (e: React.MouseEvent) => {
     e.preventDefault(); e.stopPropagation()
@@ -69,11 +62,6 @@ export function RoommateCard({
                 <h3 className="font-bold text-gray-900 text-base">{name}, {age}</h3>
                 <p className="text-xs text-gray-500">{gender} · {occupation}</p>
               </div>
-              <motion.button whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.9 }}
-                onClick={handleLike}
-                className="p-1.5 rounded-full hover:bg-red-50 transition-colors flex-shrink-0">
-                <HeartIcon className={`w-4 h-4 transition-all ${liked ? 'fill-red-500 text-red-500' : 'text-gray-300'}`} />
-              </motion.button>
             </div>
 
             <div className="flex flex-wrap gap-2 mt-2">

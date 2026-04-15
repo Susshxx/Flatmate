@@ -296,7 +296,7 @@ function AddPropertyModal({ onClose, onAdd, editingProperty }: { onClose: () => 
   const validate = (s: number) => {
     const e: Record<string, string> = {}
     if (s === 1) { if (!form.title.trim()) e.title = 'Title is required'; if (!form.location.trim()) e.location = 'Location is required' }
-    if (s === 2) { if (!form.rent || isNaN(+form.rent) || +form.rent < 1000) e.rent = 'Enter valid rent (min रू 1,000)'; if (!form.area.trim()) e.area = 'Area is required' }
+    if (s === 2) { if (!form.rent || isNaN(+form.rent) || +form.rent < 5000) e.rent = 'Enter valid rent (min रू 5,000)'; if (!form.area.trim()) e.area = 'Area is required' }
     setErrors(e); return Object.keys(e).length === 0
   }
 
@@ -361,7 +361,12 @@ function AddPropertyModal({ onClose, onAdd, editingProperty }: { onClose: () => 
             propId: created.id 
           }, ...adminNotifs]);
           
-          toast.success('Property submitted for admin review!');
+          toast.success('Property submitted for admin review!', {
+            style: {
+              background: '#2F7D5F',
+              color: 'white',
+            },
+          });
         } else {
           toast.error('Failed to create property');
         }
@@ -579,7 +584,12 @@ function AddPropertyModal({ onClose, onAdd, editingProperty }: { onClose: () => 
                                 latitude: e.latlng.lat, 
                                 longitude: e.latlng.lng 
                               }));
-                              toast.success('📍 Location pinned on map!');
+                              toast.success('Location pinned on map!', {
+                                style: {
+                                  background: '#2F7D5F',
+                                  color: 'white',
+                                },
+                              });
                             });
                             
                             // Listen for location changes from GPS button
@@ -637,7 +647,18 @@ function AddPropertyModal({ onClose, onAdd, editingProperty }: { onClose: () => 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Monthly Rent *</label>
-                    <div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">रू</span><input type="number" value={form.rent} onChange={e => setForm({ ...form, rent: e.target.value })} placeholder="25000" className={`w-full pl-8 pr-3 py-2.5 border-2 rounded-xl text-sm focus:outline-none focus:border-button-primary transition-all ${errors.rent ? 'border-red-300' : 'border-gray-200'}`} /></div>
+                    <div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">रू</span><input type="number" min="5000" value={form.rent} onChange={e => {
+                      const value = e.target.value;
+                      if (value === '' || parseInt(value) >= 5000) {
+                        setForm({ ...form, rent: value });
+                      }
+                    }} onBlur={e => {
+                      const value = parseInt(e.target.value);
+                      if (value && value < 5000) {
+                        toast.error('Minimum rent must be रू 5,000');
+                        setForm({ ...form, rent: '5000' });
+                      }
+                    }} placeholder="25000" className={`w-full pl-8 pr-3 py-2.5 border-2 rounded-xl text-sm focus:outline-none focus:border-button-primary transition-all ${errors.rent ? 'border-red-300' : 'border-gray-200'}`} /></div>
                     {errors.rent && <p className="text-red-500 text-[10px] mt-0.5">{errors.rent}</p>}
                   </div>
                   <div>
@@ -647,15 +668,81 @@ function AddPropertyModal({ onClose, onAdd, editingProperty }: { onClose: () => 
                   </div>
                   <div>
                     <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Bedrooms</label>
-                    <select value={form.beds} onChange={e => setForm({ ...form, beds: e.target.value })} className="w-full px-3 py-2.5 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:border-button-primary bg-white">
-                      {['1', '2', '3', '4', '5+'].map(n => <option key={n} value={n}>{n}</option>)}
-                    </select>
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const dropdown = document.getElementById('bedrooms-dropdown');
+                          if (dropdown) dropdown.classList.toggle('hidden');
+                        }}
+                        className="w-full px-3 py-2.5 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:border-button-primary bg-white text-left flex items-center justify-between hover:border-button-primary/50 transition-all"
+                      >
+                        <span>{form.beds}</span>
+                        <ChevronDownIcon className="w-4 h-4 text-gray-400" />
+                      </button>
+                      <div
+                        id="bedrooms-dropdown"
+                        className="hidden absolute z-50 mt-1 w-full bg-white border border-gray-100 rounded-xl shadow-lg overflow-hidden"
+                        onMouseLeave={(e) => {
+                          const dropdown = e.currentTarget;
+                          setTimeout(() => dropdown.classList.add('hidden'), 100);
+                        }}
+                      >
+                        {['1', '2', '3', '4', '5+'].map(n => (
+                          <button
+                            key={n}
+                            type="button"
+                            onClick={() => {
+                              setForm({ ...form, beds: n });
+                              document.getElementById('bedrooms-dropdown')?.classList.add('hidden');
+                            }}
+                            className="w-full px-3 py-2 text-left text-sm transition-colors text-gray-700 hover:bg-button-primary/10 hover:text-button-primary"
+                          >
+                            {form.beds === n && <CheckIcon className="w-3 h-3 inline mr-2 text-button-primary" />}
+                            {n}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                   <div>
                     <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Bathrooms</label>
-                    <select value={form.baths} onChange={e => setForm({ ...form, baths: e.target.value })} className="w-full px-3 py-2.5 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:border-button-primary bg-white">
-                      {['1', '2', '3', '4+'].map(n => <option key={n} value={n}>{n}</option>)}
-                    </select>
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const dropdown = document.getElementById('bathrooms-dropdown');
+                          if (dropdown) dropdown.classList.toggle('hidden');
+                        }}
+                        className="w-full px-3 py-2.5 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:border-button-primary bg-white text-left flex items-center justify-between hover:border-button-primary/50 transition-all"
+                      >
+                        <span>{form.baths}</span>
+                        <ChevronDownIcon className="w-4 h-4 text-gray-400" />
+                      </button>
+                      <div
+                        id="bathrooms-dropdown"
+                        className="hidden absolute z-50 mt-1 w-full bg-white border border-gray-100 rounded-xl shadow-lg overflow-hidden"
+                        onMouseLeave={(e) => {
+                          const dropdown = e.currentTarget;
+                          setTimeout(() => dropdown.classList.add('hidden'), 100);
+                        }}
+                      >
+                        {['1', '2', '3', '4+'].map(n => (
+                          <button
+                            key={n}
+                            type="button"
+                            onClick={() => {
+                              setForm({ ...form, baths: n });
+                              document.getElementById('bathrooms-dropdown')?.classList.add('hidden');
+                            }}
+                            className="w-full px-3 py-2 text-left text-sm transition-colors text-gray-700 hover:bg-button-primary/10 hover:text-button-primary"
+                          >
+                            {form.baths === n && <CheckIcon className="w-3 h-3 inline mr-2 text-button-primary" />}
+                            {n}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div>
@@ -1946,17 +2033,70 @@ export function OwnerDashboard() {
   const propFilterRef = useRef<HTMLDivElement>(null)
   const tenantFilterRef = useRef<HTMLDivElement>(null)
 
+  // Sync bookings to tenants - automatically add tenants from bookings
+  const syncBookingsToTenants = () => {
+    const currentBookings = ls('fm_bookings')
+    const storedTenants = ls('fm_owner_tenants')
+    const existingTenantEmails = new Set([...storedTenants, ...INIT_TENANTS].map(t => t.email.toLowerCase()))
+    
+    // Create tenant records from bookings that don't exist yet
+    const newTenants = currentBookings
+      .filter((b: any) => b.customerEmail && !existingTenantEmails.has(b.customerEmail.toLowerCase()))
+      .map((b: any) => {
+        const nameParts = (b.customerName || '').split(' ')
+        const firstName = nameParts[0] || 'Unknown'
+        const lastName = nameParts.slice(1).join(' ') || 'User'
+        
+        return {
+          id: `t_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          firstName,
+          lastName,
+          email: b.customerEmail,
+          phone: b.customerPhone || '—',
+          property: b.propertyTitle || '—',
+          propId: b.propertyId || '',
+          rentDue: new Date().toISOString().split('T')[0],
+          status: b.status === 'confirmed' ? 'active' : 'pending',
+          paid: b.paymentType === 'full' || b.paymentType === 'advance',
+          joinedDate: b.createdAt ? new Date(b.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+          lastAccess: new Date().toISOString().split('T')[0],
+          reports: 0,
+          blocked: false,
+          muted: false,
+          archived: false,
+          blockReason: ''
+        }
+      })
+    
+    if (newTenants.length > 0) {
+      const updatedTenants = [...storedTenants, ...newTenants]
+      setLS('fm_owner_tenants', updatedTenants)
+      return updatedTenants
+    }
+    
+    return storedTenants
+  }
+
   useEffect(() => {
+    // Initial sync
+    syncBookingsToTenants()
+    
     const id = setInterval(() => {
       setBookings(ls('fm_bookings'))
       
-      const storedTenants = ls('fm_owner_tenants')
-      if (storedTenants.length > 0) setTenants([...storedTenants, ...INIT_TENANTS])
-      else setTenants(INIT_TENANTS)
+      // Sync bookings to tenants on each refresh
+      const syncedTenants = syncBookingsToTenants()
+      setTenants([...syncedTenants, ...INIT_TENANTS])
       
       const storedNotifs = ls('fm_owner_notifs')
-      if (storedNotifs.length > 0) setNotifs([...storedNotifs, ...INIT_NOTIFS])
-      else setNotifs(INIT_NOTIFS)
+      // Only use stored notifications if they exist, don't merge with INIT_NOTIFS to preserve read status
+      if (storedNotifs.length > 0) {
+        setNotifs(storedNotifs)
+      } else {
+        // First time initialization
+        setNotifs(INIT_NOTIFS)
+        setLS('fm_owner_notifs', INIT_NOTIFS)
+      }
 
       // Don't reset properties here - they're managed by the dedicated useEffect
     }, 5000)
@@ -1975,7 +2115,12 @@ export function OwnerDashboard() {
     setBookings(ls('fm_bookings'))
     await new Promise(r => setTimeout(r, 700))
     setRefreshing(false)
-    toast.success('Data refreshed!')
+    toast('Data refreshed!', {
+      style: {
+        background: '#2F7D5F',
+        color: 'white',
+      },
+    })
   }
 
   const handleLogout = () => { 
@@ -2083,7 +2228,12 @@ export function OwnerDashboard() {
     })
     setLS('fm_admin_notifs', adminNotifs)
     
-    toast.success('Tenant blocked')
+    toast.error('Tenant blocked', {
+      style: {
+        background: '#ef4444',
+        color: 'white',
+      },
+    })
     setBlockTenantModal(null)
     setBlockReason('')
   }
@@ -2394,17 +2544,29 @@ export function OwnerDashboard() {
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-x-auto">
-        <table className="w-full text-xs min-w-[700px]">
+        <table className="w-full text-xs min-w-[800px]">
           <thead>
             <tr className="border-b border-gray-100">
               <th className="p-3 w-8"><input type="checkbox" checked={selectedTenantIds.length === filteredTenants.length && filteredTenants.length > 0} onChange={() => setSelectedTenantIds(p => p.length === filteredTenants.length ? [] : filteredTenants.map(t => t.id))} className="w-3.5 h-3.5 rounded border-2 border-gray-300 accent-button-primary cursor-pointer" /></th>
-              {['Tenant', 'Email', 'Property', 'Status', 'Rent', 'Joined', 'Last Active', 'Reason', 'Actions'].map(h => <th key={h} className="p-3 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wider whitespace-nowrap">{h}</th>)}
+              {['Tenant', 'Email', 'Property', 'Status', 'Payment Type', 'Rent', 'Joined', 'Last Active', 'Reason', 'Actions'].map(h => <th key={h} className="p-3 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wider whitespace-nowrap">{h}</th>)}
             </tr>
           </thead>
           <tbody>
-            <AnimatePresence>
-              {filteredTenants.map((t, i) => (
-                <motion.tr key={t.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ delay: i * 0.03 }}
+            {filteredTenants.map((t, i) => {
+              // Find booking for this tenant to get payment type
+              const booking = bookings.find((b: any) => 
+                b.customerName?.toLowerCase().includes(`${t.firstName} ${t.lastName}`.toLowerCase()) ||
+                b.customerEmail === t.email
+              );
+              const paymentTypeDisplay = booking?.paymentType === 'advance' ? 'Half (30%)' : 
+                                        booking?.paymentType === 'full' ? 'Full' : 
+                                        booking?.paymentType === 'cash' ? 'Cash' : '—';
+              const paymentTypeColor = booking?.paymentType === 'advance' ? 'bg-blue-100 text-blue-700' : 
+                                      booking?.paymentType === 'full' ? 'bg-green-100 text-green-700' : 
+                                      booking?.paymentType === 'cash' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500';
+              
+              return (
+                <tr key={t.id}
                   className={`border-b border-gray-50 hover:bg-gray-50/60 transition-colors ${t.blocked ? 'opacity-40' : ''}`}>
                   <td className="p-3"><input type="checkbox" checked={selectedTenantIds.includes(t.id)} onChange={() => setSelectedTenantIds(p => p.includes(t.id) ? p.filter(x => x !== t.id) : [...p, t.id])} className="w-3.5 h-3.5 rounded border-2 border-gray-300 accent-button-primary cursor-pointer" /></td>
                   <td className="p-3"><div className="flex items-center gap-2">
@@ -2414,6 +2576,7 @@ export function OwnerDashboard() {
                   <td className="p-3 text-gray-500">{t.email}</td>
                   <td className="p-3 text-gray-500 truncate max-w-[110px]">{t.property}</td>
                   <td className="p-3"><span className={`font-semibold px-2 py-0.5 rounded-full ${t.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>{t.status}</span></td>
+                  <td className="p-3"><span className={`font-semibold px-2 py-0.5 rounded-full text-[10px] ${paymentTypeColor}`}>{paymentTypeDisplay}</span></td>
                   <td className="p-3"><span className={`font-semibold px-2 py-0.5 rounded-full ${t.paid ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>{t.paid ? 'Paid' : 'Due'}</span></td>
                   <td className="p-3 text-gray-400 whitespace-nowrap">{daysSince(t.joinedDate)}</td>
                   <td className="p-3 text-gray-400 whitespace-nowrap">{daysSince(t.lastAccess)}</td>
@@ -2426,8 +2589,18 @@ export function OwnerDashboard() {
                   </td>
                   <td className="p-3">
                     <div className="flex items-center gap-1">
-                      <button onClick={() => setBlockTenantModal({ id: t.id, name: `${t.firstName} ${t.lastName}` })} 
-                        className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${t.blocked ? 'bg-red-100 text-red-600' : 'border border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
+                      <button 
+                        onClick={() => {
+                          if (!t.blocked) {
+                            setBlockTenantModal({ id: t.id, name: `${t.firstName} ${t.lastName}` });
+                          }
+                        }}
+                        disabled={t.blocked}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                          t.blocked 
+                            ? 'bg-red-100 text-red-600 cursor-not-allowed' 
+                            : 'border border-gray-200 text-gray-600 hover:bg-gray-50 cursor-pointer'
+                        }`}>
                         {t.blocked ? 'Blocked' : 'Block'}
                       </button>
                       <button onClick={() => setDeleteTenantModal({ id: t.id, name: `${t.firstName} ${t.lastName}` })} 
@@ -2436,9 +2609,9 @@ export function OwnerDashboard() {
                       </button>
                     </div>
                   </td>
-                </motion.tr>
-              ))}
-            </AnimatePresence>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
         {filteredTenants.length === 0 && <div className="text-center py-10 text-gray-400 text-xs">No tenants match this filter.</div>}
@@ -2603,7 +2776,12 @@ export function OwnerDashboard() {
           const updated = notifs.map(n => ({ ...n, read: true }))
           setNotifs(updated)
           setLS('fm_owner_notifs', updated)
-          toast.success('All notifications marked as read')
+          toast('All notifications marked as read', {
+            style: {
+              background: '#2F7D5F',
+              color: 'white',
+            },
+          })
         }} className="text-xs text-button-primary font-medium hover:underline">Mark all read</button>
       </div>
       {/* Today */}
@@ -2622,7 +2800,11 @@ export function OwnerDashboard() {
                   <p className="text-[11px] text-gray-500">{n.msg}</p>
                   <p className="text-[10px] text-gray-400 mt-0.5 flex items-center gap-1"><ClockIcon className="w-2.5 h-2.5" />{n.time}</p>
                 </div>
-                <button onClick={() => setNotifs(prev => prev.map(x => x.id === n.id ? { ...x, read: true } : x))} className="p-1 text-gray-300 hover:text-gray-500 rounded-lg flex-shrink-0"><XIcon className="w-3 h-3" /></button>
+                <button onClick={() => {
+                  const updated = notifs.map(x => x.id === n.id ? { ...x, read: true } : x)
+                  setNotifs(updated)
+                  setLS('fm_owner_notifs', updated)
+                }} className="p-1 text-gray-300 hover:text-gray-500 rounded-lg flex-shrink-0"><XIcon className="w-3 h-3" /></button>
               </motion.div>
             ))}
           </div>
