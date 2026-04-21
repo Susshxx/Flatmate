@@ -15,7 +15,7 @@ export function generateOwnerResponse(userMessage: string, propertyData?: any): 
 
   // Rent/Price questions
   if (message.match(/rent|price|cost|how much|monthly|payment/)) {
-    return 'The monthly rent is रू 25,000 with a security deposit of रू 50,000 (2 months rent). This includes basic maintenance. Utilities are separate. Would you like more details about the payment terms?';
+    return 'The monthly rent is NPR 25,000 with a security deposit of NPR 50,000 (2 months rent). This includes basic maintenance. Utilities are separate. Would you like more details about the payment terms?';
   }
 
   // Visit/viewing questions
@@ -50,7 +50,7 @@ export function generateOwnerResponse(userMessage: string, propertyData?: any): 
 
   // Deposit/advance questions
   if (message.match(/deposit|advance|security|refund/)) {
-    return "The security deposit is रू 50,000 (2 months rent), which is fully refundable when you move out, provided there's no damage. First month's rent is due at signing. The deposit will be returned within 15 days after you vacate.";
+    return "The security deposit is NPR 50,000 (2 months rent), which is fully refundable when you move out, provided there's no damage. First month's rent is due at signing. The deposit will be returned within 15 days after you vacate.";
   }
 
   // Roommate/sharing questions

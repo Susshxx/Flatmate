@@ -178,7 +178,7 @@ function ProfitBarChart({ data }: { data:typeof MONTHLY_INCOME }) {
       {data.map((d,i) => (
         <div key={d.m} className="flex-1 flex flex-col items-center gap-0.5 group relative">
           <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[10px] px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none">
-            रू {(d.income/1000).toFixed(0)}K
+            NPR {(d.income/1000).toFixed(0)}K
           </div>
           <motion.div initial={{height:0}} animate={{height:`${(d.income/max)*100}%`}}
             transition={{delay:i*0.08,duration:0.6,ease:[0.16,1,0.3,1]}}
@@ -747,7 +747,7 @@ function AdminPropertiesPanel({ users, blockedOwners, onBlockUser }: { users: an
                       {ownerBlocked && <span className="text-[10px] bg-red-100 text-red-600 font-bold px-2 py-0.5 rounded-full">Owner Blocked</span>}
                     </div>
                     <p className="text-xs text-gray-500 truncate">{p.location} · Owner: {p.ownerName || 'Unknown'}</p>
-                    <p className="text-xs text-button-primary font-semibold mt-0.5">रू {Number(p.rent).toLocaleString()}/mo · {p.type} · {p.beds || p.bedrooms || '?'} bed</p>
+                    <p className="text-xs text-button-primary font-semibold mt-0.5">NPR {Number(p.rent).toLocaleString()}/mo · {p.type} · {p.beds || p.bedrooms || '?'} bed</p>
                   </div>
 
                   {/* Status badge */}
@@ -870,7 +870,7 @@ function AdminPropertiesPanel({ users, blockedOwners, onBlockUser }: { users: an
                     {previewProperty.location}
                   </p>
                   <p className="text-2xl font-black text-button-primary mt-2">
-                    रू {Number(previewProperty.rent).toLocaleString()}<span className="text-sm font-normal text-gray-500">/month</span>
+                    NPR {Number(previewProperty.rent).toLocaleString()}<span className="text-sm font-normal text-gray-500">/month</span>
                   </p>
                 </div>
 
@@ -1711,7 +1711,7 @@ export function AdminDashboard() {
           {[
             {label:'Total Users',    value:users.length,          icon:UsersIcon,        bg:'bg-gradient-to-br from-blue-50 to-sky-100',     ic:'bg-blue-100 text-blue-600',   border:'border-blue-100',  vc:'text-blue-800',  sub:'↑ 12% this month', tab:'users'},
             {label:'Active Bookings',value:visibleBookings.length, icon:CalendarIcon,    bg:'bg-gradient-to-br from-pink-50 to-rose-100',    ic:'bg-pink-100 text-pink-600',   border:'border-pink-100',  vc:'text-pink-800',  sub:`${visibleBookings.filter((b:any)=>b.status==='confirmed').length} confirmed`, tab:'bookings'},
-            {label:'Monthly Profit', value:`रू ${(profit/1000).toFixed(0)}K`,icon:DollarSignIcon, bg:'bg-gradient-to-br from-amber-50 to-yellow-100',ic:'bg-amber-100 text-amber-600', border:'border-amber-100', vc:'text-amber-800', sub:'↑ 8.3% vs last month', tab:null},
+            {label:'Monthly Profit', value:`NPR ${(profit/1000).toFixed(0)}K`,icon:DollarSignIcon, bg:'bg-gradient-to-br from-amber-50 to-yellow-100',ic:'bg-amber-100 text-amber-600', border:'border-amber-100', vc:'text-amber-800', sub:'↑ 8.3% vs last month', tab:null},
             {label:'Total Properties', value:properties.length,            icon:BuildingIcon,bg:'bg-gradient-to-br from-green-50 to-emerald-100',ic:'bg-green-100 text-green-600', border:'border-green-100',  vc:'text-green-800', sub:'all listings', tab:'properties'},
           ].map((s,i) => (
             <motion.div key={s.label} initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} transition={{delay:i*0.07}}
@@ -1821,7 +1821,7 @@ export function AdminDashboard() {
               <h3 className="font-bold text-gray-900 text-sm">Total Income (P&L)</h3>
               <span className="text-xs text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full">+18%</span>
             </div>
-            <p className="text-base font-black text-emerald-600 mb-0.5">रू {(profit/1000).toFixed(0)}K profit</p>
+            <p className="text-base font-black text-emerald-600 mb-0.5">NPR {(profit/1000).toFixed(0)}K profit</p>
             <div className="flex gap-4 text-xs mb-2">
               <span className="flex items-center gap-1"><span className="w-3 h-1.5 bg-emerald-500 rounded inline-block"/>Income</span>
               <span className="flex items-center gap-1"><span className="w-3 h-1.5 bg-red-300 rounded inline-block"/>Expense</span>
@@ -2184,7 +2184,7 @@ export function AdminDashboard() {
                     <td className="p-3 text-xs text-gray-700 max-w-[150px] truncate">{b.propertyTitle}</td>
                     <td className="p-3 text-xs text-gray-700">{b.customerName}</td>
                     <td className="p-3"><span className={`text-xs font-bold px-2 py-0.5 rounded-full capitalize ${b.paymentType==='advance'?'bg-blue-100 text-blue-700':b.paymentType==='full'?'bg-green-100 text-green-700':'bg-gray-100 text-gray-600'}`}>{b.paymentType||'cash'}</span></td>
-                    <td className="p-3 text-xs font-bold text-gray-900">{b.amount>0?`रू ${b.amount?.toLocaleString()}`:'Cash'}</td>
+                    <td className="p-3 text-xs font-bold text-gray-900">{b.amount>0?`NPR ${b.amount?.toLocaleString()}`:'Cash'}</td>
                     <td className="p-3"><span className={`text-xs font-bold px-2 py-0.5 rounded-full ${b.status==='confirmed'?'bg-green-100 text-green-700':'bg-amber-100 text-amber-700'}`}>{b.status}</span></td>
                     <td className="p-3 text-xs text-gray-400">{b.moveInDate}</td>
                     <td className="p-3">
@@ -2204,7 +2204,7 @@ export function AdminDashboard() {
             {[
               {label:'Total Bookings',value:visibleBookings.length,color:'from-blue-500 to-blue-600'},
               {label:'Confirmed',     value:visibleBookings.filter((b:any)=>b.status==='confirmed').length,color:'from-emerald-500 to-emerald-600'},
-              {label:'Total Revenue', value:`रू ${visibleBookings.reduce((s:number,b:any)=>s+(b.amount||0),0).toLocaleString()}`,color:'from-purple-500 to-purple-600'},
+              {label:'Total Revenue', value:`NPR ${visibleBookings.reduce((s:number,b:any)=>s+(b.amount||0),0).toLocaleString()}`,color:'from-purple-500 to-purple-600'},
             ].map(s=>(
               <div key={s.label} className={`bg-gradient-to-br ${s.color} rounded-2xl p-4 text-center text-white`}>
                 <p className="text-xl font-black">{s.value}</p>
@@ -2229,8 +2229,8 @@ export function AdminDashboard() {
         {/* Top KPIs */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            {label:'Total Revenue',value:`रू ${(totalIncome/1000).toFixed(0)}K`,icon:DollarSignIcon,color:'from-emerald-500 to-teal-600'},
-            {label:'Net Profit',   value:`रू ${(profit/1000).toFixed(0)}K`,     icon:TrendingUpIcon, color:'from-blue-500 to-indigo-600'},
+            {label:'Total Revenue',value:`NPR ${(totalIncome/1000).toFixed(0)}K`,icon:DollarSignIcon,color:'from-emerald-500 to-teal-600'},
+            {label:'Net Profit',   value:`NPR ${(profit/1000).toFixed(0)}K`,     icon:TrendingUpIcon, color:'from-blue-500 to-indigo-600'},
             {label:'Total Users',  value:users.length,                           icon:UsersIcon,      color:'from-purple-500 to-violet-600'},
             {label:'Avg. Rating',  value:'4.3 ★',                                icon:StarIcon,       color:'from-amber-500 to-orange-600'},
           ].map((s,i)=>(

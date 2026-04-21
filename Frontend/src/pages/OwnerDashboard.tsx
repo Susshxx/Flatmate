@@ -44,7 +44,7 @@
  * - notifs: Stored in localStorage under `fm_owner_notifs`
  */
 
-// src/pages/OwnerDashboard.tsx — PROFESSIONAL REBUILD
+// src/pages/OwnerDashboard.tsx â€” PROFESSIONAL REBUILD
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
@@ -60,18 +60,20 @@ import {
   BedDoubleIcon, BathIcon, PackageIcon, ArchiveIcon, VolumeXIcon, UserCheckIcon,
   ClockIcon, AlertTriangleIcon, TrendingDownIcon, CheckSquareIcon, RefreshCwIcon,
   ArrowLeftIcon, InfoIcon, CheckCheckIcon, VideoIcon, MicIcon, KeyRoundIcon, GlobeIcon,
-  SunIcon, MoonIcon, BellRingIcon,
+  SunIcon, MoonIcon, BellRingIcon, HistoryIcon, CreditCardIcon, ShieldAlertIcon,
+  CrownIcon, MessageSquareIcon, ZapIcon,
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 import { toast } from 'sonner'
 import { getChats, getOrCreateChat, sendMessage, markChatAsSeen, Chat } from '../utils/chatStorage'
 import { getProperties, createProperty, updateProperty, deleteProperty, Property } from '../utils/propertyAPI'
+import { OwnerHistorySection } from '../components/OwnerHistorySection'
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const ls     = (k: string, fb = '[]') => { try { return JSON.parse(localStorage.getItem(k) || fb) } catch { return JSON.parse(fb) } }
 const setLS  = (k: string, v: any)   => { try { localStorage.setItem(k, JSON.stringify(v)) } catch {} }
-const fmtNPR = (n: number) => `रू ${n.toLocaleString()}`
+const fmtNPR = (n: number) => `NPR ${n.toLocaleString()}`
 const daysSince = (d: string) => {
   const diff = Math.floor((Date.now() - new Date(d).getTime()) / 86400000)
   if (diff === 0) return 'Today'
@@ -79,7 +81,7 @@ const daysSince = (d: string) => {
   return `${diff}d ago`
 }
 
-// ─── Soft pastel tokens ───────────────────────────────────────────────────────
+// â”€â”€â”€ Soft pastel tokens â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const PASTELS = {
   blue:   { bg: 'bg-blue-50',   border: 'border-blue-100',   icon: 'bg-blue-100 text-blue-600',    val: 'text-blue-700'   },
   pink:   { bg: 'bg-pink-50',   border: 'border-pink-100',   icon: 'bg-pink-100 text-pink-600',    val: 'text-pink-700'   },
@@ -89,7 +91,7 @@ const PASTELS = {
   teal:   { bg: 'bg-teal-50',   border: 'border-teal-100',   icon: 'bg-teal-100 text-teal-600',    val: 'text-teal-700'   },
 }
 
-// ─── Mock Data ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Mock Data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const daysAgo = (n: number) => new Date(Date.now() - n * 86400000).toISOString().split('T')[0]
 
 const INIT_PROPERTIES: any[] = []
@@ -133,7 +135,7 @@ const INIT_NOTIFS = [
   { id: 'n5', title: 'New Review',         msg: 'Anita Thapa left a 5-star review',            time: '3d ago',  ts: Date.now() - 259200000, type: 'success', read: true  },
 ]
 
-// ─── Empty form ───────────────────────────────────────────────────────────────
+// â”€â”€â”€ Empty form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const EMPTY_FORM = { 
   ownerName: '', 
   ownerContact: '', 
@@ -159,7 +161,7 @@ const PROP_TYPES = ['Apartment', 'House', 'Flat', 'Studio', 'Room', 'Villa']
 const FURNISHINGS = ['Unfurnished', 'Semi-furnished', 'Fully furnished']
 const AMENITIES_LIST = ['WiFi', 'Parking', 'Balcony', 'CCTV', 'Generator', 'Water Purifier', 'Gas', 'Laundry', 'Gym', 'Swimming Pool', 'Garden', 'Elevator']
 
-// ─── Chart primitives ─────────────────────────────────────────────────────────
+// â”€â”€â”€ Chart primitives â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function AreaChart({ data, h = 80 }: { data: typeof MONTHLY_REV; h?: number }) {
   const maxR = Math.max(...data.map(d => d.revenue))
   const W = 300
@@ -257,7 +259,7 @@ function MiniCalendar() {
   )
 }
 
-// ─── Stat Card ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Stat Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function StatCard({ icon: Icon, value, label, trend, pastel, sub, onClick }: any) {
   const p = PASTELS[pastel as keyof typeof PASTELS] || PASTELS.blue
   return (
@@ -274,7 +276,7 @@ function StatCard({ icon: Icon, value, label, trend, pastel, sub, onClick }: any
   )
 }
 
-// ─── Add Property Modal ────────────────────────────────────────────────────────
+// â”€â”€â”€ Add Property Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function AddPropertyModal({ onClose, onAdd, editingProperty }: { onClose: () => void; onAdd: (p: any) => void; editingProperty?: any }) {
   const [form, setForm] = useState(editingProperty || EMPTY_FORM)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -296,7 +298,7 @@ function AddPropertyModal({ onClose, onAdd, editingProperty }: { onClose: () => 
   const validate = (s: number) => {
     const e: Record<string, string> = {}
     if (s === 1) { if (!form.title.trim()) e.title = 'Title is required'; if (!form.location.trim()) e.location = 'Location is required' }
-    if (s === 2) { if (!form.rent || isNaN(+form.rent) || +form.rent < 5000) e.rent = 'Enter valid rent (min रू 5,000)'; if (!form.area.trim()) e.area = 'Area is required' }
+    if (s === 2) { if (!form.rent || isNaN(+form.rent) || +form.rent < 5000) e.rent = 'Enter valid rent (min NPR 5,000)'; if (!form.area.trim()) e.area = 'Area is required' }
     setErrors(e); return Object.keys(e).length === 0
   }
 
@@ -545,14 +547,14 @@ function AddPropertyModal({ onClose, onAdd, editingProperty }: { onClose: () => 
                             
                             // Add OpenStreetMap tiles
                             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                              attribution: '© OpenStreetMap contributors',
+                              attribution: 'Â© OpenStreetMap contributors',
                               maxZoom: 19
                             }).addTo(map);
                             
                             // Custom marker icon
                             const markerIcon = L.divIcon({
                               html: `<div style="width:32px;height:32px;background:linear-gradient(135deg,#ef4444,#dc2626);border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid white;box-shadow:0 4px 12px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;">
-                                <div style="transform:rotate(45deg);font-size:16px;">📍</div>
+                                <div style="transform:rotate(45deg);font-size:16px;">ðŸ“</div>
                               </div>`,
                               className: '',
                               iconSize: [32, 32],
@@ -573,7 +575,7 @@ function AddPropertyModal({ onClose, onAdd, editingProperty }: { onClose: () => 
                                 latitude: position.lat, 
                                 longitude: position.lng 
                               }));
-                              toast.success('📍 Location updated by dragging!');
+                              toast.success('ðŸ“ Location updated by dragging!');
                             });
                             
                             // Update marker when clicking on map
@@ -608,7 +610,7 @@ function AddPropertyModal({ onClose, onAdd, editingProperty }: { onClose: () => 
                       }}
                     />
                     <div className="absolute top-2 left-2 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg text-[10px] font-semibold text-gray-700 z-[1000] border border-gray-200">
-                      💡 Drag the pin or click anywhere to set location
+                      ðŸ’¡ Drag the pin or click anywhere to set location
                     </div>
                   </div>
                   
@@ -616,7 +618,7 @@ function AddPropertyModal({ onClose, onAdd, editingProperty }: { onClose: () => 
                     <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg flex items-start gap-2">
                       <CheckCircleIcon className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
                       <div className="flex-1">
-                        <p className="text-[11px] text-green-700 font-bold mb-0.5">✓ Location Set Successfully</p>
+                        <p className="text-[11px] text-green-700 font-bold mb-0.5">âœ“ Location Set Successfully</p>
                         <p className="text-[10px] text-green-600">
                           Coordinates: {form.latitude.toFixed(6)}, {form.longitude.toFixed(6)}
                         </p>
@@ -647,7 +649,7 @@ function AddPropertyModal({ onClose, onAdd, editingProperty }: { onClose: () => 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Monthly Rent *</label>
-                    <div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">रू</span><input type="number" min="5000" value={form.rent} onChange={e => {
+                    <div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">NPR</span><input type="number" min="5000" value={form.rent} onChange={e => {
                       const value = e.target.value;
                       if (value === '' || parseInt(value) >= 5000) {
                         setForm({ ...form, rent: value });
@@ -655,7 +657,7 @@ function AddPropertyModal({ onClose, onAdd, editingProperty }: { onClose: () => 
                     }} onBlur={e => {
                       const value = parseInt(e.target.value);
                       if (value && value < 5000) {
-                        toast.error('Minimum rent must be रू 5,000');
+                        toast.error('Minimum rent must be NPR 5,000');
                         setForm({ ...form, rent: '5000' });
                       }
                     }} placeholder="25000" className={`w-full pl-8 pr-3 py-2.5 border-2 rounded-xl text-sm focus:outline-none focus:border-button-primary transition-all ${errors.rent ? 'border-red-300' : 'border-gray-200'}`} /></div>
@@ -880,7 +882,7 @@ function AddPropertyModal({ onClose, onAdd, editingProperty }: { onClose: () => 
                         ))}
                       </div>
                       <p className="text-[10px] text-gray-400 mt-2">
-                        💡 First image will be used as the main property image
+                        ðŸ’¡ First image will be used as the main property image
                       </p>
                     </div>
                   )}
@@ -888,8 +890,8 @@ function AddPropertyModal({ onClose, onAdd, editingProperty }: { onClose: () => 
 
                 <div className="bg-gray-50 rounded-xl p-4 space-y-1.5">
                   <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Summary</p>
-                  {[['Title', form.title], ['Location', form.location], ['Type', form.type], ['Rent', form.rent ? fmtNPR(+form.rent) : '—'], ['Area', form.area], ['Beds/Baths', `${form.beds} / ${form.baths}`], ['Furnishing', form.furnishing], ['Images', `${form.images.length} uploaded`]].map(([l, v]) => (
-                    <div key={l} className="flex justify-between text-xs"><span className="text-gray-400">{l}</span><span className="font-medium text-gray-800 truncate max-w-[60%] text-right">{v || '—'}</span></div>
+                  {[['Title', form.title], ['Location', form.location], ['Type', form.type], ['Rent', form.rent ? fmtNPR(+form.rent) : 'â€”'], ['Area', form.area], ['Beds/Baths', `${form.beds} / ${form.baths}`], ['Furnishing', form.furnishing], ['Images', `${form.images.length} uploaded`]].map(([l, v]) => (
+                    <div key={l} className="flex justify-between text-xs"><span className="text-gray-400">{l}</span><span className="font-medium text-gray-800 truncate max-w-[60%] text-right">{v || 'â€”'}</span></div>
                   ))}
                 </div>
               </motion.div>
@@ -914,7 +916,7 @@ function AddPropertyModal({ onClose, onAdd, editingProperty }: { onClose: () => 
   )
 }
 
-// ─── Application Modal ─────────────────────────────────────────────────────────
+// â”€â”€â”€ Application Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function ApplicationModal({ app, onClose, onApprove, onReject }: any) {
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
@@ -941,7 +943,7 @@ function ApplicationModal({ app, onClose, onApprove, onReject }: any) {
   )
 }
 
-// ─── Messenger Component ───────────────────────────────────────────────────────
+// â”€â”€â”€ Messenger Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function MessengerPanel({ activeConvId }: { activeConvId?: string }) {
   const { user } = useAuth()
   const [convs, setConvs] = useState<Chat[]>([])
@@ -1138,7 +1140,7 @@ function MessengerPanel({ activeConvId }: { activeConvId?: string }) {
   )
 }
 
-// ─── Owner Messenger (same UI as MessagesPage, filtered by ownerName) ─────────
+// â”€â”€â”€ Owner Messenger (same UI as MessagesPage, filtered by ownerName) â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function OwnerMessengerFull({ user, activeConvId }: { user: any; activeConvId?: string }) {
   const [conversations, setConversations] = useState<Chat[]>([])
   const [selectedConv, setSelectedConv]   = useState<Chat | null>(null)
@@ -1371,7 +1373,7 @@ function OwnerMessengerFull({ user, activeConvId }: { user: any; activeConvId?: 
   )
 }
 
-// ─── Owner Settings Panel ─────────────────────────────────────────────────────
+// â”€â”€â”€ Owner Settings Panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function OwnerSettingsPanel({ user }: { user: any }) {
   const { isDark, toggleTheme } = useTheme()
   const [profile, setProfile] = useState({
@@ -1582,7 +1584,7 @@ function OwnerSettingsPanel({ user }: { user: any }) {
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-5 max-w-2xl">
 
-      {/* ── Profile Info ── */}
+      {/* â”€â”€ Profile Info â”€â”€ */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
         <p className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-4">Profile Information</p>
 
@@ -1741,7 +1743,7 @@ function OwnerSettingsPanel({ user }: { user: any }) {
         </motion.button>
       </div>
 
-      {/* ── Change Password ── */}
+      {/* â”€â”€ Change Password â”€â”€ */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
         <p className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-4">Change Password</p>
         <div className="space-y-3 mb-4">
@@ -1760,7 +1762,7 @@ function OwnerSettingsPanel({ user }: { user: any }) {
         </motion.button>
       </div>
 
-      {/* ── Notification Preferences ── */}
+      {/* â”€â”€ Notification Preferences â”€â”€ */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
         <p className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-4">Notification Preferences</p>
         <div className="space-y-2.5">
@@ -1781,7 +1783,7 @@ function OwnerSettingsPanel({ user }: { user: any }) {
         </div>
       </div>
 
-      {/* ── Display Preferences ── */}
+      {/* â”€â”€ Display Preferences â”€â”€ */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
         <div className="flex items-center gap-2 mb-4">
           <SunIcon className="w-4 h-4 text-button-primary"/>
@@ -1820,7 +1822,7 @@ function OwnerSettingsPanel({ user }: { user: any }) {
         </div>
       </div>
 
-      {/* ── Security ── */}
+      {/* â”€â”€ Security â”€â”€ */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
         <p className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-4">Security</p>
         <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-100 rounded-xl mb-3">
@@ -1830,7 +1832,7 @@ function OwnerSettingsPanel({ user }: { user: any }) {
         </div>
         <div className="space-y-2">
           {[
-            { icon: KeyRoundIcon, label: 'Active Sessions', sub: '1 device — this browser', action: 'Manage' },
+            { icon: KeyRoundIcon, label: 'Active Sessions', sub: '1 device â€” this browser', action: 'Manage' },
             { icon: GlobeIcon,    label: 'Login History',   sub: 'Last login: just now',     action: 'View' },
           ].map(item => (
             <button key={item.label} onClick={() => toast.info('Coming soon')}
@@ -1844,7 +1846,7 @@ function OwnerSettingsPanel({ user }: { user: any }) {
         </div>
       </div>
 
-      {/* ── Danger Zone ── */}
+      {/* â”€â”€ Danger Zone â”€â”€ */}
       <div className="bg-white rounded-2xl border border-red-100 shadow-sm p-5">
         <p className="text-xs font-bold text-red-500 uppercase tracking-wider mb-3">Danger Zone</p>
         {[
@@ -1853,7 +1855,7 @@ function OwnerSettingsPanel({ user }: { user: any }) {
         ].map(a => (
           <div key={a.l} className="flex items-center justify-between p-3 bg-red-50 rounded-xl mb-2">
             <div><p className="text-xs font-medium text-gray-900">{a.l}</p><p className="text-[10px] text-gray-400">{a.d}</p></div>
-            <button onClick={() => toast.error(`${a.l} — contact support`)}
+            <button onClick={() => toast.error(`${a.l} â€” contact support`)}
               className="px-3 py-1.5 bg-red-400 text-white text-[10px] font-semibold rounded-lg hover:bg-red-500 transition-all">{a.btn}</button>
           </div>
         ))}
@@ -1862,7 +1864,7 @@ function OwnerSettingsPanel({ user }: { user: any }) {
   )
 }
 
-// ─── MAIN ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ MAIN â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function OwnerDashboard() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
@@ -1886,6 +1888,7 @@ export function OwnerDashboard() {
   }, [user, navigate]);
 
   const [activeTab, setActiveTab] = useState('overview')
+  const [historyTab, setHistoryTab] = useState('bookings')
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
@@ -2052,8 +2055,8 @@ export function OwnerDashboard() {
           firstName,
           lastName,
           email: b.customerEmail,
-          phone: b.customerPhone || '—',
-          property: b.propertyTitle || '—',
+          phone: b.customerPhone || 'â€”',
+          property: b.propertyTitle || 'â€”',
           propId: b.propertyId || '',
           rentDue: new Date().toISOString().split('T')[0],
           status: b.status === 'confirmed' ? 'active' : 'pending',
@@ -2278,6 +2281,7 @@ export function OwnerDashboard() {
     { id: 'tenants',       label: 'Tenants',       icon: UsersIcon },
     { id: 'bookings',      label: 'Bookings',      icon: CalendarIcon },
     { id: 'analytics',     label: 'Analytics',     icon: BarChart3Icon },
+    { id: 'history',       label: 'History',       icon: HistoryIcon },
     { id: 'messages',      label: 'Messages',      icon: MessageCircleIcon },
     { id: 'notifications', label: 'Notifications', icon: BellIcon },
     { id: 'settings',      label: 'Settings',      icon: SettingsIcon },
@@ -2285,7 +2289,7 @@ export function OwnerDashboard() {
 
   const renderContent = () => { switch (activeTab) {
 
-  // ── OVERVIEW ─────────────────────────────────────────────────────────────────
+  // â”€â”€ OVERVIEW â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   case 'overview': return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
       {/* Welcome + refresh */}
@@ -2327,7 +2331,7 @@ export function OwnerDashboard() {
 
       {/* Charts row */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-        {/* Revenue chart — 3 cols */}
+        {/* Revenue chart â€” 3 cols */}
         <div className="lg:col-span-3 bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
           <div className="flex items-start justify-between mb-3">
             <div>
@@ -2348,7 +2352,7 @@ export function OwnerDashboard() {
           </div>
         </div>
 
-        {/* Calendar — 2 cols */}
+        {/* Calendar â€” 2 cols */}
         <div className="lg:col-span-2 bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
           <p className="text-xs font-semibold text-gray-800 mb-3">Today's Schedule</p>
           <MiniCalendar />
@@ -2370,7 +2374,7 @@ export function OwnerDashboard() {
               { msg: 'Anita Thapa paid rent for 2BHK', time: '2h ago', dot: 'bg-green-400' },
               { msg: 'New inquiry on Spacious 3BHK', time: '5h ago', dot: 'bg-blue-400' },
               { msg: 'New application from Rajan', time: '1d ago', dot: 'bg-amber-400' },
-              { msg: 'Maintenance request — water heater', time: '2d ago', dot: 'bg-red-400' },
+              { msg: 'Maintenance request â€” water heater', time: '2d ago', dot: 'bg-red-400' },
             ].map((a, i) => (
               <motion.div key={i} initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }} className="flex items-start gap-2.5">
                 <div className={`w-2 h-2 rounded-full ${a.dot} mt-1.5 flex-shrink-0`} />
@@ -2421,7 +2425,7 @@ export function OwnerDashboard() {
     </motion.div>
   )
 
-  // ── PROPERTIES ───────────────────────────────────────────────────────────────
+  // â”€â”€ PROPERTIES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   case 'properties': return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
       {/* Status tabs */}
@@ -2448,14 +2452,14 @@ export function OwnerDashboard() {
           <motion.div key={p.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
             <div className="relative h-40 overflow-hidden">
               <img src={p.image} alt={p.title} className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
-              {p.isPremium && <span className="absolute top-2 left-2 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-md">⭐ PREMIUM</span>}
-              <div className="absolute top-2.5 right-2.5"><span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${p.status === 'pending' ? 'bg-amber-400 text-white' : p.status === 'approved' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>{p.status === 'pending' ? '⏳ Pending' : p.status === 'approved' ? '✓ Approved' : '✗ Rejected'}</span></div>
+              {p.isPremium && <span className="absolute top-2 left-2 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-md">â­ PREMIUM</span>}
+              <div className="absolute top-2.5 right-2.5"><span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${p.status === 'pending' ? 'bg-amber-400 text-white' : p.status === 'approved' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>{p.status === 'pending' ? 'â³ Pending' : p.status === 'approved' ? 'âœ“ Approved' : 'âœ— Rejected'}</span></div>
             </div>
             <div className="p-4">
               <h4 className="font-bold text-gray-900 text-xs mb-0.5 truncate">{p.title}</h4>
               <div className="flex items-center gap-1 text-[10px] text-gray-400 mb-2"><MapPinIcon className="w-3 h-3" />{p.location}</div>
               <p className="text-button-primary font-bold text-sm mb-2">{fmtNPR(p.rent)}<span className="text-[10px] font-normal text-gray-400">/mo</span></p>
-              <div className="flex items-center gap-2 text-[10px] text-gray-400 mb-3"><span>{p.beds}bd</span><span>·</span><span>{p.baths}ba</span><span>·</span><span>{p.area}</span></div>
+              <div className="flex items-center gap-2 text-[10px] text-gray-400 mb-3"><span>{p.beds}bd</span><span>Â·</span><span>{p.baths}ba</span><span>Â·</span><span>{p.area}</span></div>
               <div className="grid grid-cols-3 gap-1.5 mb-3">
                 {[{ l: 'Views', v: p.views, c: 'bg-blue-50 text-blue-600' }, { l: 'Saved', v: p.saves, c: 'bg-pink-50 text-pink-600' }, { l: 'Inquiries', v: p.inquiries, c: 'bg-violet-50 text-violet-600' }].map(s => (
                   <div key={s.l} className={`${s.c} rounded-lg py-1.5 text-center`}><p className="text-xs font-bold">{s.v}</p><p className="text-[9px] font-medium">{s.l}</p></div>
@@ -2503,7 +2507,7 @@ export function OwnerDashboard() {
     </motion.div>
   )
 
-  // ── TENANTS ──────────────────────────────────────────────────────────────────
+  // â”€â”€ TENANTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   case 'tenants': return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
       {/* Pending applications */}
@@ -2560,7 +2564,7 @@ export function OwnerDashboard() {
               );
               const paymentTypeDisplay = booking?.paymentType === 'advance' ? 'Half (30%)' : 
                                         booking?.paymentType === 'full' ? 'Full' : 
-                                        booking?.paymentType === 'cash' ? 'Cash' : '—';
+                                        booking?.paymentType === 'cash' ? 'Cash' : 'â€”';
               const paymentTypeColor = booking?.paymentType === 'advance' ? 'bg-blue-100 text-blue-700' : 
                                       booking?.paymentType === 'full' ? 'bg-green-100 text-green-700' : 
                                       booking?.paymentType === 'cash' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500';
@@ -2584,7 +2588,7 @@ export function OwnerDashboard() {
                     {t.blocked && t.blockReason ? (
                       <span className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded">{t.blockReason}</span>
                     ) : (
-                      <span className="text-xs text-gray-400">—</span>
+                      <span className="text-xs text-gray-400">â€”</span>
                     )}
                   </td>
                   <td className="p-3">
@@ -2619,7 +2623,7 @@ export function OwnerDashboard() {
     </motion.div>
   )
 
-  // ── BOOKINGS ─────────────────────────────────────────────────────────────────
+  // â”€â”€ BOOKINGS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   case 'bookings': return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
       {/* KPI */}
@@ -2655,7 +2659,7 @@ export function OwnerDashboard() {
             <tbody>
               {myBookings.map((b: any, i: number) => (
                 <motion.tr key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }} className="border-b border-gray-50 hover:bg-gray-50/60 transition-colors">
-                  <td className="p-3 font-mono text-button-primary text-[10px]">{b.receiptId || '—'}</td>
+                  <td className="p-3 font-mono text-button-primary text-[10px]">{b.receiptId || 'â€”'}</td>
                   <td className="p-3 text-gray-600 max-w-[130px] truncate">{b.propertyTitle}</td>
                   <td className="p-3 text-gray-600">{b.customerName}</td>
                   <td className="p-3 font-semibold text-gray-800">{b.amount > 0 ? fmtNPR(b.amount) : 'Cash'}</td>
@@ -2679,7 +2683,7 @@ export function OwnerDashboard() {
     </motion.div>
   )
 
-  // ── ANALYTICS ────────────────────────────────────────────────────────────────
+  // â”€â”€ ANALYTICS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   case 'analytics': return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
       {/* KPI row */}
@@ -2760,14 +2764,14 @@ export function OwnerDashboard() {
     </motion.div>
   )
 
-  // ── MESSAGES ─────────────────────────────────────────────────────────────────
+  // â”€â”€ MESSAGES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   case 'messages': return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
       <OwnerMessengerFull user={user} activeConvId={activeChatId} />
     </motion.div>
   )
 
-  // ── NOTIFICATIONS ─────────────────────────────────────────────────────────────
+  // â”€â”€ NOTIFICATIONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   case 'notifications': return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
       <div className="flex items-center justify-between mb-4">
@@ -2830,14 +2834,30 @@ export function OwnerDashboard() {
     </motion.div>
   )
 
-  // ── SETTINGS ─────────────────────────────────────────────────────────────────
+
+  // ── HISTORY ──────────────────────────────────────────────────────────────────
+  case 'history': return (
+    <OwnerHistorySection
+      myBookings={myBookings}
+      notifs={notifs}
+      totalRev={totalRev}
+      properties={properties}
+      historyTab={historyTab}
+      setHistoryTab={setHistoryTab}
+      fmtNPR={fmtNPR}
+      daysAgo={daysAgo}
+      MOCK_INVOICES={MOCK_INVOICES}
+      MOCK_REVIEWS={MOCK_REVIEWS}
+    />
+  )
+
   case 'settings': return <OwnerSettingsPanel user={user} />
 
   default: return null
   }}
 
-  const hdrMap: Record<string, string> = { overview: 'Owner Dashboard', properties: `Welcome, ${user?.name?.split(' ')[0] || 'Owner'}`, tenants: `Welcome, ${user?.name?.split(' ')[0] || 'Owner'}`, bookings: `Welcome, ${user?.name?.split(' ')[0] || 'Owner'}`, analytics: `Welcome, ${user?.name?.split(' ')[0] || 'Owner'}`, messages: `Welcome, ${user?.name?.split(' ')[0] || 'Owner'}`, notifications: `Welcome, ${user?.name?.split(' ')[0] || 'Owner'}`, settings: `Welcome, ${user?.name?.split(' ')[0] || 'Owner'}` }
-  const subMap: Record<string, string> = { overview: 'Manage properties and track performance', properties: 'Your property listings', tenants: 'Manage your tenants', bookings: 'Booking requests and confirmations', analytics: 'Revenue and performance analytics', messages: 'Chat with tenants and applicants', notifications: 'Recent alerts and updates', settings: 'Account and preferences' }
+  const hdrMap: Record<string, string> = { overview: 'Owner Dashboard', properties: `Welcome, ${user?.name?.split(' ')[0] || 'Owner'}`, tenants: `Welcome, ${user?.name?.split(' ')[0] || 'Owner'}`, bookings: `Welcome, ${user?.name?.split(' ')[0] || 'Owner'}`, analytics: `Welcome, ${user?.name?.split(' ')[0] || 'Owner'}`, history: `Welcome, ${user?.name?.split(' ')[0] || 'Owner'}`, messages: `Welcome, ${user?.name?.split(' ')[0] || 'Owner'}`, notifications: `Welcome, ${user?.name?.split(' ')[0] || 'Owner'}`, settings: `Welcome, ${user?.name?.split(' ')[0] || 'Owner'}` }
+  const subMap: Record<string, string> = { overview: 'Manage properties and track performance', properties: 'Your property listings', tenants: 'Manage your tenants', bookings: 'Booking requests and confirmations', analytics: 'Revenue and performance analytics', history: 'Full activity and transaction history', messages: 'Chat with tenants and applicants', notifications: 'Recent alerts and updates', settings: 'Account and preferences' }
 
   return (
     <main className="min-h-screen bg-gray-50/60 flex">

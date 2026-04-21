@@ -243,7 +243,20 @@ export function PropertiesPage() {
 
   // Merge owner-submitted properties (deduplicated) at the front — only approved ones
   const mergedProperties = [
-    ...ownerProperties.filter((op: any) => op.status === 'approved' && !allProperties.find(p => p.id === op.id)),
+    ...ownerProperties.map((op: any) => ({
+      id: op._id || op.id,
+      image: op.image || op.images?.[0] || IMGS[0],
+      title: op.title,
+      location: op.location,
+      type: op.type,
+      rent: op.rent,
+      bedrooms: op.beds || op.bedrooms || 1,
+      bathrooms: op.baths || op.bathrooms || 1,
+      ownerName: op.ownerName,
+      views: op.views || 0,
+      isPremium: op.isPremium || false,
+      createdAt: -1, // Always sort to top (newest)
+    })),
     ...allProperties,
   ]
 
@@ -251,9 +264,9 @@ export function PropertiesPage() {
   const strictFiltered = mergedProperties.filter(p => {
     if (location !== 'All Locations' && p.location !== location)         return false
     if (propType !== 'All Types'     && p.type !== propType)             return false
-    if (!matchBeds(p.bedrooms || p.beds || 1, bedrooms))                 return false
+    if (!matchBeds(p.bedrooms || 1, bedrooms))                           return false
     if (!matchPrice(p.rent, priceRange))                                 return false
-    if (!applyCategory(p.type, p.bedrooms || p.beds || 1, activeCategory)) return false
+    if (!applyCategory(p.type, p.bedrooms || 1, activeCategory))         return false
     return true
   })
 
@@ -268,7 +281,7 @@ export function PropertiesPage() {
       if (location !== 'All Locations' && p.location !== location) return false
       if (propType !== 'All Types'     && p.type !== propType)     return false
       if (!matchPrice(p.rent, priceRange))                         return false
-      if (!applyCategory(p.type, p.bedrooms || p.beds || 1, activeCategory)) return false
+      if (!applyCategory(p.type, p.bedrooms || 1, activeCategory)) return false
       return true
     })
     if (fb1.length >= MIN_RESULTS) {
@@ -279,7 +292,7 @@ export function PropertiesPage() {
       const fb2 = mergedProperties.filter(p => {
         if (location !== 'All Locations' && p.location !== location) return false
         if (!matchPrice(p.rent, priceRange))                         return false
-        if (!applyCategory(p.type, p.bedrooms || p.beds || 1, activeCategory)) return false
+        if (!applyCategory(p.type, p.bedrooms || 1, activeCategory)) return false
         return true
       })
       if (fb2.length >= MIN_RESULTS) {
@@ -298,8 +311,8 @@ export function PropertiesPage() {
     if (sortBy === 'price-high')   return b.rent - a.rent
     if (sortBy === 'price-low')    return a.rent - b.rent
     if (sortBy === 'most-viewed')  return b.views - a.views
-    if (sortBy === 'oldest')       return b.createdAt - a.createdAt
-    return a.createdAt - b.createdAt
+    if (sortBy === 'oldest')       return a.createdAt - b.createdAt
+    return a.createdAt - b.createdAt  // 'latest': backend props have createdAt=-1, always first
   })
 
   const hasFilters = location !== 'All Locations' || propType !== 'All Types' ||
