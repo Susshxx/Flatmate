@@ -1651,8 +1651,6 @@ export function TenantDashboard() {
                       <div className="flex items-center gap-2 mb-3">
                         {[
                           { icon: ImageIcon,  label: 'image',  title:'Send image' },
-                          { icon: VideoIcon,  label: 'video',  title:'Send video' },
-                          { icon: MicIcon,    label: 'audio',  title:'Send voice' },
                         ].map(btn => (
                           <motion.button key={btn.label} whileHover={{ scale:1.1 }} whileTap={{ scale:0.9 }}
                             onClick={() => handleFileUpload(btn.label as any)} title={btn.title}

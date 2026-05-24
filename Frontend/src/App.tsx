@@ -101,6 +101,11 @@ export function App() {
                     <OwnerDashboard />
                   </ProtectedRoute>
                 } />
+                <Route path="/dashboard/landlord" element={
+                  <ProtectedRoute allowedRoles={['landlord', 'owner']}>
+                    <OwnerDashboard />
+                  </ProtectedRoute>
+                } />
                 <Route path="/dashboard/admin" element={
                   <ProtectedRoute allowedRoles={['admin']}>
                     <AdminDashboard />

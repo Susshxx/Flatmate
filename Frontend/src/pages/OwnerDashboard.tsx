@@ -1594,7 +1594,7 @@ function OwnerMessengerFull({ user, activeConvId }: { user: any; activeConvId?: 
   )
 
   return (
-    <div className="grid grid-cols-12 h-[calc(100vh-12rem)] bg-white dark:bg-gray-800 shadow-sm rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700">
+    <div className="grid grid-cols-12 h-full bg-white dark:bg-gray-800 shadow-sm rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700">
       {/* Sidebar */}
       <div className={`col-span-12 md:col-span-4 border-r border-gray-100 dark:border-gray-700 flex flex-col bg-white dark:bg-gray-800 ${selectedConv ? 'hidden md:flex' : 'flex'}`}>
         <div className="p-4 border-b border-gray-100 dark:border-gray-700">
@@ -1635,7 +1635,7 @@ function OwnerMessengerFull({ user, activeConvId }: { user: any; activeConvId?: 
       </div>
 
       {/* Chat area */}
-      <div className={`col-span-12 md:col-span-8 flex flex-col h-full bg-white dark:bg-gray-800 ${selectedConv ? 'flex' : 'hidden md:flex'}`}>
+      <div className={`col-span-12 md:col-span-8 flex flex-col h-[calc(100vh-12rem)] bg-white dark:bg-gray-800 ${selectedConv ? 'flex' : 'hidden md:flex'}`}>
         {selectedConv ? (
           <>
             {/* Chat header - fixed */}
@@ -1676,7 +1676,7 @@ function OwnerMessengerFull({ user, activeConvId }: { user: any; activeConvId?: 
             </AnimatePresence>
 
             {/* Messages - scrollable */}
-            <div className="flex-1 overflow-y-auto p-5 bg-gray-50 dark:bg-gray-900 space-y-3 min-h-0">
+            <div className="overflow-y-auto p-5 bg-gray-50 dark:bg-gray-900 space-y-3 flex-1">
               <AnimatePresence initial={false}>
                 {selectedConv.messages.map(msg => {
                   const isOwn = msg.senderRole === 'owner'
@@ -1704,9 +1704,9 @@ function OwnerMessengerFull({ user, activeConvId }: { user: any; activeConvId?: 
             {/* Input - fixed at bottom */}
             <div className="p-4 border-t border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0">
               <div className="flex items-center gap-2 mb-3">
-                {[{ icon: ImageIcon, type: 'image' }, { icon: VideoIcon, type: 'video' }, { icon: MicIcon, type: 'audio' }].map(btn => (
-                  <motion.button key={btn.type} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
-                    onClick={() => handleFileUpload(btn.type as any)}
+                {[{ icon: ImageIcon, label: 'image', title: 'Send image' }].map(btn => (
+                  <motion.button key={btn.label} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
+                    onClick={() => handleFileUpload(btn.label as any)} title={btn.title}
                     className="p-2 text-gray-400 hover:text-button-primary hover:bg-button-primary/10 rounded-full transition-colors">
                     <btn.icon className="w-5 h-5" />
                   </motion.button>
