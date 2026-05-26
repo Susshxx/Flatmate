@@ -57,6 +57,8 @@
 // src/utils/propertyAPI.ts
 // Property API functions for interacting with the backend
 
+import { BACKEND_URL } from '../config/api'
+
 export interface Property {
   id?: string
   _id?: string
@@ -84,7 +86,7 @@ export interface Property {
   updatedAt?: string
 }
 
-const API_BASE = '/api/properties'
+const API_BASE = `${BACKEND_URL}/api/properties`
 
 // Get all properties or filter by query params
 export async function getProperties(filters?: {
