@@ -69,7 +69,7 @@ import { useTheme } from '../contexts/ThemeContext'
 import { toast } from '../utils/toast'
 import { AdminHistorySection } from '../components/AdminHistorySection'
 import { AddPropertyModalAdmin } from '../components/AddPropertyModalAdmin'
-
+import { BACKEND_URL } from '../config/api'
 // ─── localStorage helpers ─────────────────────────────────────────────────────
 const ls  = (k: string, fb = '[]') => { try { return JSON.parse(localStorage.getItem(k) || fb) } catch { return JSON.parse(fb) } }
 const setLS = (k: string, v: any)  => { try { localStorage.setItem(k, JSON.stringify(v)) } catch {} }
@@ -369,7 +369,7 @@ function AddUserModal({ onClose, onAdd }: { onClose:()=>void; onAdd:(u:any)=>voi
     try {
       // Try to call backend API first
       try {
-        const response = await fetch('http://localhost:5000/api/users', {
+        const response = await fetch(`${BACKEND_URL}/api/users`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -685,7 +685,7 @@ function AdminPropertiesPanel({ users, blockedOwners, onBlockUser }: { users: an
   useEffect(() => {
     const fetchProperties = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/properties/all');
+        const response = await fetch(`${BACKEND_URL}/api/properties/all`);
         if (response.ok) {
           const data = await response.json();
           setProperties(data.properties || []);
@@ -710,8 +710,8 @@ function AdminPropertiesPanel({ users, blockedOwners, onBlockUser }: { users: an
   const updateStatus = async (propId: string, status: 'approved' | 'rejected', reason?: string) => {
     try {
       const endpoint = status === 'approved' 
-        ? `http://localhost:5000/api/properties/${propId}/approve`
-        : `http://localhost:5000/api/properties/${propId}/reject`;
+        ? `${BACKEND_URL}/api/properties/${propId}/approve`
+        : `${BACKEND_URL}/api/properties/${propId}/reject`;
       
       const body = status === 'rejected' ? { reason: reason || 'Not specified' } : {};
       
@@ -1356,7 +1356,7 @@ export function AdminDashboard() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/users');
+        const response = await fetch(`${BACKEND_URL}/api/users`);
         if (response.ok) {
           const data = await response.json();
           if (data.success && data.users) {
@@ -1506,7 +1506,7 @@ export function AdminDashboard() {
 
     // Fetch from backend using email
     try {
-      const response = await fetch(`http://localhost:5000/api/users/email/${encodeURIComponent(user.email)}`)
+      const response = await fetch(`${BACKEND_URL}/api/users/email/${encodeURIComponent(user.email)}`)
       if (response.ok) {
         const data = await response.json()
         if (data.success && data.user) {
@@ -1526,8 +1526,8 @@ export function AdminDashboard() {
       console.log('👤 Fetching contact messages...')
       setLoadingMessages(true)
       try {
-        console.log('📡 Fetching from: http://localhost:5000/api/contact/messages')
-        const response = await fetch('http://localhost:5000/api/contact/messages', {
+        console.log('📡 Fetching from:', `${BACKEND_URL}/api/contact/messages`)
+        const response = await fetch(`${BACKEND_URL}/api/contact/messages`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json'
@@ -1559,7 +1559,7 @@ export function AdminDashboard() {
   useEffect(() => {
     const fetchProperties = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/properties/all')
+        const response = await fetch(`${BACKEND_URL}/api/properties/all`)
         if (response.ok) {
           const data = await response.json()
           setProperties(data.properties || [])
@@ -1580,7 +1580,7 @@ export function AdminDashboard() {
       if (user?.role !== 'admin') return
 
       try {
-        const response = await fetch('http://localhost:5000/api/contact/messages', {
+        const response = await fetch(`${BACKEND_URL}/api/contact/messages`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json'
@@ -1600,7 +1600,7 @@ export function AdminDashboard() {
       if (user?.role !== 'admin') return
 
       try {
-        const response = await fetch('http://localhost:5000/api/properties/all')
+        const response = await fetch(`${BACKEND_URL}/api/properties/all`)
         if (response.ok) {
           const data = await response.json()
           setProperties(data.properties || [])
@@ -1723,7 +1723,7 @@ export function AdminDashboard() {
       }
 
       // Call backend API to update user profile
-      const response = await fetch(`http://localhost:5000/api/users/${userId}/profile`, {
+      const response = await fetch(`${BACKEND_URL}/api/users/${userId}/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -1809,7 +1809,7 @@ export function AdminDashboard() {
     
     // Save to backend
     try {
-      const response = await fetch(`http://localhost:5000/api/users/${uid}`, {
+      const response = await fetch(`${BACKEND_URL}/api/users/${uid}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -1867,7 +1867,7 @@ export function AdminDashboard() {
       }
       
       // Try to delete from backend
-      const response = await fetch(`http://localhost:5000/api/users/${uid}`, {
+      const response = await fetch(`${BACKEND_URL}/api/users/${uid}`, {
         method: 'DELETE'
       })
       
@@ -1897,7 +1897,7 @@ export function AdminDashboard() {
   
   const approveUser = async (uid: string) => { 
     try {
-      const response = await fetch(`http://localhost:5000/api/users/${uid}`, {
+      const response = await fetch(`${BACKEND_URL}/api/users/${uid}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
