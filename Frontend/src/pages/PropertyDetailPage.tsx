@@ -1338,15 +1338,27 @@ export function PropertyDetailPage() {
                   }`}
                 >
                   {bookingLoading ? (
-                    <><motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full" /> Checking...</>
+                    <>
+                      <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full" />
+                      <span>Checking...</span>
+                    </>
                   ) : isBooked ? (
                     existingBooking?.status === 'pending' ? (
-                      <><ClockIcon className="w-4 h-4" /> Pending Approval</>
+                      <>
+                        <ClockIcon className="w-4 h-4" />
+                        <span>Pending Approval</span>
+                      </>
                     ) : (
-                      <><CheckCircleIcon className="w-4 h-4" /> Booked</>
+                      <>
+                        <CheckCircleIcon className="w-4 h-4" />
+                        <span>Booked</span>
+                      </>
                     )
                   ) : (
-                    <><CalendarIcon className="w-4 h-4" /> Book Now</>
+                    <>
+                      <CalendarIcon className="w-4 h-4" />
+                      <span>Book Now</span>
+                    </>
                   )}
                 </motion.button>
                 <motion.button
