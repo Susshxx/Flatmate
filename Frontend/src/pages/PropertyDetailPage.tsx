@@ -622,6 +622,7 @@ export function PropertyDetailPage() {
   const [property,    setProperty]    = useState<any>(null)
   const [loading,     setLoading]     = useState(true)
   const [recommended, setRecommended] = useState<any[]>([])
+  const [renderError, setRenderError] = useState<string | null>(null)
 
   const [activeImg,   setActiveImg]   = useState(0)
   const [showGallery, setShowGallery] = useState(false)
@@ -1074,9 +1075,11 @@ export function PropertyDetailPage() {
     )
   }
 
-  // ── Render ─────────────────────────────────────────────────────────────────
-  return (
-    <main className="min-h-screen bg-background-light text-primary pb-20">
+  // Wrap render in error boundary
+  try {
+    // ── Render ─────────────────────────────────────────────────────────────────
+    return (
+      <main className="min-h-screen bg-background-light text-primary pb-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28">
 
         {/* Breadcrumb + save */}
