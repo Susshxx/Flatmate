@@ -120,7 +120,27 @@ app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'ok', 
     message: 'Server is running',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    env: {
+      hasGoogleClientId: !!process.env.GOOGLE_CLIENT_ID,
+      hasJwtSecret: !!process.env.JWT_SECRET,
+      hasMongoUri: !!process.env.MONGO_URI,
+      frontendUrl: process.env.FRONTEND_URL || 'not set'
+    }
+  });
+});
+
+// Test endpoint for Google auth configuration
+app.get('/auth/test', (req, res) => {
+  res.json({
+    message: 'Auth endpoints are working',
+    googleClientIdConfigured: !!process.env.GOOGLE_CLIENT_ID,
+    endpoints: {
+      signup: '/auth/google-signup (POST)',
+      login: '/auth/google-login (POST)',
+      regularSignup: '/auth/signup (POST)',
+      regularLogin: '/auth/login (POST)'
+    }
   });
 });
 
