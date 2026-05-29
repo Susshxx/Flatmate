@@ -10,7 +10,7 @@ import {
   ChevronRightIcon, XIcon, SendIcon, StarIcon, CheckCircleIcon,
   CalendarIcon, CreditCardIcon, DownloadIcon, AlertCircleIcon,
   BuildingIcon, MapIcon, HeartIcon, ShieldCheckIcon, ArrowLeftIcon,
-  SparklesIcon,
+  SparklesIcon, ClockIcon,
 } from 'lucide-react'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
