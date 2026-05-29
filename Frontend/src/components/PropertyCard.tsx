@@ -35,10 +35,12 @@ export function PropertyCard({
 
   // Check if property is booked from backend API
   useEffect(() => {
+    let isMounted = true
+    
     const checkBookingStatus = async () => {
       try {
         const response = await fetch(`${BACKEND_URL}/api/bookings?propertyId=${id}`)
-        if (response.ok) {
+        if (response.ok && isMounted) {
           const data = await response.json()
           if (data.success && data.bookings && Array.isArray(data.bookings)) {
             const activeBooking = data.bookings.find((b: any) => 
@@ -46,7 +48,8 @@ export function PropertyCard({
             )
             
             if (activeBooking) {
-              setBookingStatus(activeBooking.status === 'pending' ? 'pending' : 'confirmed')
+              const newStatus = activeBooking.status === 'pending' ? 'pending' : 'confirmed'
+              setBookingStatus(newStatus)
             } else {
               setBookingStatus('available')
             }
@@ -54,19 +57,35 @@ export function PropertyCard({
         }
       } catch (error) {
         // If API fails, fall back to available
-        setBookingStatus('available')
+        if (isMounted) {
+          setBookingStatus('available')
+        }
       }
     }
     
     checkBookingStatus()
+    
+    return () => {
+      isMounted = false
+    }
   }, [id])
 
-  // Listen for booking changes
+  // Listen for booking changes - only for this specific property
   useEffect(() => {
-    const handleBookingChange = async () => {
+    let isMounted = true
+    
+    const handleBookingChange = async (event?: Event) => {
+      // Only update if this is a custom event with propertyId matching this card
+      if (event && 'detail' in event) {
+        const customEvent = event as CustomEvent
+        if (customEvent.detail?.propertyId && customEvent.detail.propertyId !== id) {
+          return // Not for this property, ignore
+        }
+      }
+      
       try {
         const response = await fetch(`${BACKEND_URL}/api/bookings?propertyId=${id}`)
-        if (response.ok) {
+        if (response.ok && isMounted) {
           const data = await response.json()
           if (data.success && data.bookings && Array.isArray(data.bookings)) {
             const activeBooking = data.bookings.find((b: any) => 
@@ -74,7 +93,8 @@ export function PropertyCard({
             )
             
             if (activeBooking) {
-              setBookingStatus(activeBooking.status === 'pending' ? 'pending' : 'confirmed')
+              const newStatus = activeBooking.status === 'pending' ? 'pending' : 'confirmed'
+              setBookingStatus(newStatus)
             } else {
               setBookingStatus('available')
             }
@@ -87,6 +107,7 @@ export function PropertyCard({
     window.addEventListener('bookingUpdated', handleBookingChange)
     
     return () => {
+      isMounted = false
       window.removeEventListener('bookingAdded', handleBookingChange)
       window.removeEventListener('bookingUpdated', handleBookingChange)
     }

@@ -3062,7 +3062,7 @@ export function OwnerDashboard() {
             }
           }
         }
-        window.dispatchEvent(new Event('bookingUpdated'))
+        window.dispatchEvent(new CustomEvent('bookingUpdated', { detail: { propertyId: booking.propertyId } }))
       } else {
         const data = await response.json()
         toast.error(data.message || 'Failed to confirm booking')
@@ -3105,7 +3105,7 @@ export function OwnerDashboard() {
             }
           }
         }
-        window.dispatchEvent(new Event('bookingUpdated'))
+        window.dispatchEvent(new CustomEvent('bookingUpdated', { detail: { propertyId: booking.propertyId } }))
       } else {
         const data = await response.json()
         toast.error(data.message || 'Failed to reject booking')

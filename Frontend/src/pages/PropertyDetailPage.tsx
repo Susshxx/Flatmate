@@ -958,7 +958,7 @@ export function PropertyDetailPage() {
       
       if (savedBooking) {
         setBookingStep('success')
-        window.dispatchEvent(new Event('bookingAdded'))
+        window.dispatchEvent(new CustomEvent('bookingAdded', { detail: { propertyId: property.id } }))
         toast.success('Booking request submitted! Waiting for landlord confirmation.', {
           style: { background: '#2F7D5F', color: 'white' },
         })
@@ -1023,7 +1023,7 @@ export function PropertyDetailPage() {
         
         if (savedBooking) {
           setBookingStep('success')
-          window.dispatchEvent(new Event('bookingAdded'))
+          window.dispatchEvent(new CustomEvent('bookingAdded', { detail: { propertyId: property.id } }))
           toast.success('Payment confirmed! Booking request submitted.', {
             style: { background: '#2F7D5F', color: 'white' },
           })
