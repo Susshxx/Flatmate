@@ -82,9 +82,12 @@ const allowedOrigins = [FRONTEND_URL, 'http://localhost:5173', 'http://localhost
 app.use(cors({
   origin: [
     'http://localhost:5173',
+    'http://localhost:3000',
     'https://sumedha2408480-flat-mate.onrender.com',
-  ],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    'https://flatmate-cfq8.onrender.com',
+    process.env.FRONTEND_URL
+  ].filter(Boolean),
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
 }))
