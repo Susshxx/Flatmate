@@ -2544,7 +2544,8 @@ export function OwnerDashboard() {
     return stored
   })
   const [applications, setApplications] = useState(INIT_APPLICATIONS)
-  const [bookings, setBookings] = useState<any[]>(() => ls('fm_bookings'))
+  const [bookings, setBookings] = useState<any[]>([])
+  const [bookingsLoading, setBookingsLoading] = useState(false)
   const [notifs, setNotifs] = useState<any[]>([]) // Notifications fetched from backend
   const [selectedApp, setSelectedApp] = useState<any>(null)
   const [messageUnreadCount, setMessageUnreadCount] = useState(0)
@@ -2692,6 +2693,64 @@ export function OwnerDashboard() {
     if (diffDays < 7) return `${diffDays}d ago`;
     return date.toLocaleDateString();
   };
+
+  // Fetch bookings from backend
+  useEffect(() => {
+    const fetchBookings = async () => {
+      setBookingsLoading(true);
+      try {
+        if (!user?.email) {
+          setBookings([]);
+          return;
+        }
+
+        // Get user ID from email
+        const userResponse = await fetch(`${BACKEND_URL}/api/users/email/${user.email}`);
+        if (!userResponse.ok) {
+          console.error('Failed to fetch user data for bookings');
+          setBookings([]);
+          return;
+        }
+        const userData = await userResponse.json();
+        const userId = userData.user.id || userData.user._id;
+
+        // Fetch bookings for this owner
+        const bookingsResponse = await fetch(`${BACKEND_URL}/api/bookings?ownerId=${userId}`);
+        if (!bookingsResponse.ok) {
+          console.error('Failed to fetch bookings');
+          setBookings([]);
+          return;
+        }
+        const bookingsData = await bookingsResponse.json();
+        
+        if (bookingsData.success && bookingsData.bookings) {
+          // Transform backend bookings to frontend format
+          const transformedBookings = bookingsData.bookings.map((b: any) => ({
+            ...b,
+            customerName: b.tenantName,
+            customerEmail: b.tenantEmail,
+            customerPhone: b.tenantPhone,
+            bookedAt: b.createdAt,
+          }));
+          setBookings(transformedBookings);
+          console.log('Fetched bookings from backend:', transformedBookings.length);
+        } else {
+          setBookings([]);
+        }
+      } catch (error) {
+        console.error('Error fetching bookings:', error);
+        setBookings([]);
+      } finally {
+        setBookingsLoading(false);
+      }
+    };
+
+    fetchBookings();
+    
+    // Poll for booking updates every 5 seconds
+    const interval = setInterval(fetchBookings, 5000);
+    return () => clearInterval(interval);
+  }, [user]);
 
   // Calculate message unread count
   useEffect(() => {
@@ -2999,6 +3058,90 @@ export function OwnerDashboard() {
         color: 'white',
       },
     })
+  }
+
+  // Booking confirm/reject handlers
+  const handleConfirmBooking = async (booking: any) => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/bookings/${booking._id || booking.id}/confirm`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+      })
+      
+      if (response.ok) {
+        toast.success('Booking confirmed! Property marked as unavailable.')
+        // Refresh bookings
+        const userResponse = await fetch(`${BACKEND_URL}/api/users/email/${user?.email}`)
+        if (userResponse.ok) {
+          const userData = await userResponse.json()
+          const userId = userData.user.id || userData.user._id
+          const bookingsResponse = await fetch(`${BACKEND_URL}/api/bookings?ownerId=${userId}`)
+          if (bookingsResponse.ok) {
+            const bookingsData = await bookingsResponse.json()
+            if (bookingsData.success && bookingsData.bookings) {
+              const transformedBookings = bookingsData.bookings.map((b: any) => ({
+                ...b,
+                customerName: b.tenantName,
+                customerEmail: b.tenantEmail,
+                customerPhone: b.tenantPhone,
+                bookedAt: b.createdAt,
+              }))
+              setBookings(transformedBookings)
+            }
+          }
+        }
+        window.dispatchEvent(new Event('bookingUpdated'))
+      } else {
+        const data = await response.json()
+        toast.error(data.message || 'Failed to confirm booking')
+      }
+    } catch (error) {
+      console.error('Error confirming booking:', error)
+      toast.error('Failed to confirm booking')
+    }
+  }
+
+  const handleRejectBooking = async (booking: any, reason: string) => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/bookings/${booking._id || booking.id}/reject`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason }),
+      })
+      
+      if (response.ok) {
+        toast('Booking rejected. Payment will be refunded.', {
+          style: { background: '#ef4444', color: 'white' }
+        })
+        // Refresh bookings
+        const userResponse = await fetch(`${BACKEND_URL}/api/users/email/${user?.email}`)
+        if (userResponse.ok) {
+          const userData = await userResponse.json()
+          const userId = userData.user.id || userData.user._id
+          const bookingsResponse = await fetch(`${BACKEND_URL}/api/bookings?ownerId=${userId}`)
+          if (bookingsResponse.ok) {
+            const bookingsData = await bookingsResponse.json()
+            if (bookingsData.success && bookingsData.bookings) {
+              const transformedBookings = bookingsData.bookings.map((b: any) => ({
+                ...b,
+                customerName: b.tenantName,
+                customerEmail: b.tenantEmail,
+                customerPhone: b.tenantPhone,
+                bookedAt: b.createdAt,
+              }))
+              setBookings(transformedBookings)
+            }
+          }
+        }
+        window.dispatchEvent(new Event('bookingUpdated'))
+      } else {
+        const data = await response.json()
+        toast.error(data.message || 'Failed to reject booking')
+      }
+    } catch (error) {
+      console.error('Error rejecting booking:', error)
+      toast.error('Failed to reject booking')
+    }
   }
 
   const myBookings = bookings.filter((b: any) => properties.some(p => (b.propertyTitle || '').toLowerCase().includes(p.title.split(' ')[0].toLowerCase())))
