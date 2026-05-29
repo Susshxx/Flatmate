@@ -4,10 +4,11 @@
 
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { MapPinIcon, BedDoubleIcon, BathIcon, HeartIcon, EyeIcon, ShieldCheckIcon } from 'lucide-react'
+import { MapPinIcon, BedDoubleIcon, BathIcon, HeartIcon, EyeIcon, ShieldCheckIcon, ClockIcon } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { toast } from '../utils/toast'
 import { useFavorites } from '../contexts/FavoritesContext'
+import { BACKEND_URL } from '../config/api'
 
 export interface PropertyCardProps {
   id: string
@@ -30,33 +31,64 @@ export function PropertyCard({
   const { isFavorite, toggleFavorite } = useFavorites()
   const saved = isFavorite(id)
   const [isOwnerVerified, setIsOwnerVerified] = useState(false)
-  const [isBooked, setIsBooked] = useState(false)
+  const [bookingStatus, setBookingStatus] = useState<'available' | 'pending' | 'confirmed'>('available')
 
-  // Check if property is booked
+  // Check if property is booked from backend API
   useEffect(() => {
-    try {
-      const bookings = JSON.parse(localStorage.getItem('fm_bookings') || '[]')
-      const booked = bookings.some((b: any) => b.propertyId === id && b.status === 'confirmed')
-      setIsBooked(booked)
-    } catch {}
+    const checkBookingStatus = async () => {
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/bookings?propertyId=${id}`)
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success && data.bookings && Array.isArray(data.bookings)) {
+            const activeBooking = data.bookings.find((b: any) => 
+              b.status === 'confirmed' || b.status === 'pending'
+            )
+            
+            if (activeBooking) {
+              setBookingStatus(activeBooking.status === 'pending' ? 'pending' : 'confirmed')
+            } else {
+              setBookingStatus('available')
+            }
+          }
+        }
+      } catch (error) {
+        // If API fails, fall back to available
+        setBookingStatus('available')
+      }
+    }
+    
+    checkBookingStatus()
   }, [id])
 
   // Listen for booking changes
   useEffect(() => {
-    const handleBookingChange = () => {
+    const handleBookingChange = async () => {
       try {
-        const bookings = JSON.parse(localStorage.getItem('fm_bookings') || '[]')
-        const booked = bookings.some((b: any) => b.propertyId === id && b.status === 'confirmed')
-        setIsBooked(booked)
+        const response = await fetch(`${BACKEND_URL}/api/bookings?propertyId=${id}`)
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success && data.bookings && Array.isArray(data.bookings)) {
+            const activeBooking = data.bookings.find((b: any) => 
+              b.status === 'confirmed' || b.status === 'pending'
+            )
+            
+            if (activeBooking) {
+              setBookingStatus(activeBooking.status === 'pending' ? 'pending' : 'confirmed')
+            } else {
+              setBookingStatus('available')
+            }
+          }
+        }
       } catch {}
     }
     
     window.addEventListener('bookingAdded', handleBookingChange)
-    window.addEventListener('storage', handleBookingChange)
+    window.addEventListener('bookingUpdated', handleBookingChange)
     
     return () => {
       window.removeEventListener('bookingAdded', handleBookingChange)
-      window.removeEventListener('storage', handleBookingChange)
+      window.removeEventListener('bookingUpdated', handleBookingChange)
     }
   }, [id])
 
@@ -115,7 +147,12 @@ export function PropertyCard({
           />
           {/* Badges */}
           <div className="absolute top-3 left-3 flex gap-2">
-            {isBooked ? (
+            {bookingStatus === 'pending' ? (
+              <span className="bg-yellow-500/90 backdrop-blur-sm px-2 py-1 rounded-md text-xs font-bold text-white shadow-sm flex items-center gap-1">
+                <ClockIcon className="w-3 h-3" />
+                Pending
+              </span>
+            ) : bookingStatus === 'confirmed' ? (
               <span className="bg-gray-500/90 backdrop-blur-sm px-2 py-1 rounded-md text-xs font-bold text-white shadow-sm">Booked</span>
             ) : (
               <span className="bg-white/90 backdrop-blur-sm px-2 py-1 rounded-md text-xs font-bold text-primary shadow-sm">For Rent</span>
