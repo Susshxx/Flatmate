@@ -273,17 +273,38 @@ router.post('/google-signup', async (req, res) => {
   try {
     const { idToken, role } = req.body;
 
-    const ticket = await client.verifyIdToken({
-      idToken,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
-    const payload = ticket.getPayload();
+    console.log('🔐 Google signup attempt with role:', role);
+
+    if (!idToken) {
+      return res.status(400).json({ message: 'ID token is required.' });
+    }
+
+    if (!process.env.GOOGLE_CLIENT_ID) {
+      console.error('❌ GOOGLE_CLIENT_ID not configured in environment variables');
+      return res.status(500).json({ message: 'Google authentication not configured.' });
+    }
+
+    let ticket, payload;
+    try {
+      ticket = await client.verifyIdToken({
+        idToken,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+      payload = ticket.getPayload();
+    } catch (verifyError) {
+      console.error('❌ Google token verification failed:', verifyError.message);
+      return res.status(401).json({ message: 'Invalid Google token.' });
+    }
+
     const email = payload.email.toLowerCase();
     const firstName = payload.given_name || payload.name.split(' ')[0];
     const lastName = payload.family_name || payload.name.split(' ').slice(1).join(' ') || firstName;
 
+    console.log('✅ Google token verified for:', email);
+
     const existingUser = await User.findOne({ email });
     if (existingUser && existingUser.isVerified) {
+      console.log('⚠️ User already exists:', email);
       return res.status(400).json({ message: 'Account already exists. Please log in instead.' });
     }
 
@@ -299,6 +320,7 @@ router.post('/google-signup', async (req, res) => {
       existingUser.otp = otp;
       existingUser.otpExpiry = otpExpiry;
       await existingUser.save();
+      console.log('✅ Updated existing unverified user:', email);
     } else {
       await User.create({
         firstName,
@@ -312,16 +334,22 @@ router.post('/google-signup', async (req, res) => {
         otp,
         otpExpiry,
       });
+      console.log('✅ Created new user:', email);
     }
 
     await sendOTPEmail(email, otp, 'Verify Your Flat-Mate Account');
+    console.log('✅ OTP sent to:', email);
+
     res.status(200).json({
       message: 'OTP sent.',
       user: { name: `${firstName} ${lastName}`, email },
     });
   } catch (error) {
-    console.error('Google signup error:', error);
-    res.status(500).json({ message: 'Google signup failed.' });
+    console.error('❌ Google signup error:', error);
+    res.status(500).json({ 
+      message: 'Google signup failed.', 
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined 
+    });
   }
 });
 
@@ -361,15 +389,35 @@ router.post('/google-login', async (req, res) => {
   try {
     const { idToken, role } = req.body;
 
-    const ticket = await client.verifyIdToken({
-      idToken,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
-    const payload = ticket.getPayload();
+    console.log('🔐 Google login attempt with role:', role);
+
+    if (!idToken) {
+      return res.status(400).json({ message: 'ID token is required.' });
+    }
+
+    if (!process.env.GOOGLE_CLIENT_ID) {
+      console.error('❌ GOOGLE_CLIENT_ID not configured in environment variables');
+      return res.status(500).json({ message: 'Google authentication not configured.' });
+    }
+
+    let ticket, payload;
+    try {
+      ticket = await client.verifyIdToken({
+        idToken,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+      payload = ticket.getPayload();
+    } catch (verifyError) {
+      console.error('❌ Google token verification failed:', verifyError.message);
+      return res.status(401).json({ message: 'Invalid Google token.' });
+    }
+
     const email = payload.email.toLowerCase();
     const firstName = payload.given_name || payload.name.split(' ')[0];
     const lastName = payload.family_name || payload.name.split(' ').slice(1).join(' ') || firstName;
     const googleId = payload.sub;
+
+    console.log('✅ Google token verified for:', email);
 
     let user = await User.findOne({ email });
 
@@ -385,7 +433,7 @@ router.post('/google-login', async (req, res) => {
         isGoogleUser: true,
         googleId,
       });
-      console.log('✅ New Google user auto-registered:', email);
+      console.log('✅ New Google user auto-registered:', email, 'with role:', user.role);
     } else if (!user.isVerified) {
       // If user exists but not verified, verify them now
       user.isVerified = true;
@@ -393,6 +441,8 @@ router.post('/google-login', async (req, res) => {
       user.googleId = googleId;
       await user.save();
       console.log('✅ Existing unverified user verified via Google:', email);
+    } else {
+      console.log('✅ Existing verified user logging in:', email);
     }
 
     // ✅ Validate that the user's role matches what they selected
@@ -400,6 +450,7 @@ router.post('/google-login', async (req, res) => {
       const normalizedRole = role === 'owner' ? 'landlord' : role;
       const userRole = user.role === 'owner' ? 'landlord' : user.role;
       if (normalizedRole !== userRole) {
+        console.log('⚠️ Role mismatch: user is', user.role, 'but selected', role);
         return res.status(403).json({
           message: `This account is registered as a ${user.role}, not a ${role}. Please select the correct role.`,
           wrongRole: true,
@@ -412,6 +463,8 @@ router.post('/google-login', async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
+
+    console.log('✅ Login successful for:', email);
 
     res.status(200).json({
       message: 'Login successful.',
@@ -428,8 +481,11 @@ router.post('/google-login', async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Google login error:', error);
-    res.status(500).json({ message: 'Google login failed.' });
+    console.error('❌ Google login error:', error);
+    res.status(500).json({ 
+      message: 'Google login failed.', 
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined 
+    });
   }
 });
 
