@@ -2775,34 +2775,6 @@ export function OwnerDashboard() {
     }
   };
 
-  const handleConfirmBooking = (b: any) => {
-    if (!window.confirm(`Confirm booking for ${b.customerName}?`)) return
-    const allB = ls('fm_bookings')
-    const match = allB.find((x: any) => x.receiptId === b.receiptId)
-    if (match) {
-      match.status = 'confirmed'
-      if (match.paymentType === 'cash' || match.amount === 0) {
-        // Find property rent to assign
-        const props = ls('fm_all_properties')
-        const prop = props.find((p: any) => p.title === match.propertyTitle)
-        if (prop) match.amount = prop.rent
-      }
-      setLS('fm_bookings', allB)
-      setBookings(allB)
-      
-      const adminN = ls('fm_admin_notifs')
-      adminN.unshift({ id: Date.now().toString(), type: 'booking', title: 'Booking Confirmed', msg: `Owner confirmed booking for ${match.propertyTitle}`, time: 'Just now', read: false })
-      setLS('fm_admin_notifs', adminN)
-      
-      const notifsList = ls('fm_owner_notifs')
-      notifsList.unshift({ id: Date.now().toString(), type: 'success', title: 'Booking Confirmed', msg: `You confirmed the booking for ${b.customerName}.`, time: 'Just now', read: false })
-      setLS('fm_owner_notifs', notifsList)
-      
-      toast.success('Booking confirmed!')
-    }
-  }
-
-
   // Filter/search
   const [propFilter, setPropFilter] = useState('all')
   const [propFilterOpen, setPropFilterOpen] = useState(false)
