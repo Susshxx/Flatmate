@@ -8,6 +8,8 @@ const router = express.Router();
 // POST /api/bookings - Create new booking
 router.post('/', async (req, res) => {
   try {
+    console.log('📝 Creating new booking:', req.body);
+    
     const {
       propertyId,
       propertyTitle,
@@ -34,6 +36,7 @@ router.post('/', async (req, res) => {
 
     // Validation
     if (!propertyId || !propertyTitle || !tenantName || !tenantEmail || !tenantPhone || !checkInDate || !amount || !paymentMethod || !paymentType || !receiptId) {
+      console.error('❌ Missing required fields for booking');
       return res.status(400).json({
         success: false,
         message: 'Required fields are missing'
@@ -47,6 +50,7 @@ router.post('/', async (req, res) => {
     });
 
     if (existingBooking) {
+      console.log('⚠️ Property already has a pending booking:', propertyId);
       return res.status(400).json({
         success: false,
         message: 'This property already has a pending booking. Please wait for landlord confirmation.',
@@ -81,6 +85,14 @@ router.post('/', async (req, res) => {
       status: 'pending'
     });
 
+    console.log('✅ Booking created successfully:', {
+      id: booking._id,
+      propertyTitle: booking.propertyTitle,
+      tenantName: booking.tenantName,
+      status: booking.status,
+      paymentStatus: booking.paymentStatus
+    });
+
     // Send notification to owner
     if (ownerId) {
       try {
@@ -99,9 +111,10 @@ router.post('/', async (req, res) => {
           owner.notifications = owner.notifications || [];
           owner.notifications.unshift(notification);
           await owner.save();
+          console.log('✅ Notification sent to owner:', owner.email);
         }
       } catch (error) {
-        console.error('Error sending notification:', error);
+        console.error('❌ Error sending notification:', error);
       }
     }
 
@@ -116,7 +129,7 @@ router.post('/', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Booking creation error:', error);
+    console.error('❌ Booking creation error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error',
@@ -130,6 +143,8 @@ router.get('/', async (req, res) => {
   try {
     const { ownerId, tenantId, propertyId, status } = req.query;
     
+    console.log('📋 Fetching bookings with filters:', { ownerId, tenantId, propertyId, status });
+    
     let query = {};
     if (ownerId) query.ownerId = ownerId;
     if (tenantId) query.tenantId = tenantId;
@@ -137,6 +152,8 @@ router.get('/', async (req, res) => {
     if (status) query.status = status;
 
     const bookings = await Booking.find(query).sort({ createdAt: -1 });
+
+    console.log(`✅ Found ${bookings.length} bookings`);
 
     res.json({
       success: true,
@@ -147,7 +164,7 @@ router.get('/', async (req, res) => {
       }))
     });
   } catch (error) {
-    console.error('Error fetching bookings:', error);
+    console.error('❌ Error fetching bookings:', error);
     res.status(500).json({
       success: false,
       message: 'Server error',
@@ -189,9 +206,12 @@ router.get('/:id', async (req, res) => {
 // PUT /api/bookings/:id/confirm - Confirm booking (landlord)
 router.put('/:id/confirm', async (req, res) => {
   try {
+    console.log('✅ Confirming booking:', req.params.id);
+    
     const booking = await Booking.findById(req.params.id);
     
     if (!booking) {
+      console.error('❌ Booking not found:', req.params.id);
       return res.status(404).json({
         success: false,
         message: 'Booking not found'
@@ -202,6 +222,8 @@ router.put('/:id/confirm', async (req, res) => {
     booking.paymentStatus = 'completed'; // Payment is now completed
     await booking.save();
 
+    console.log('✅ Booking confirmed, updating property status');
+
     // Update property status to unavailable
     await Property.findByIdAndUpdate(booking.propertyId, {
       status: 'unavailable',
@@ -209,7 +231,7 @@ router.put('/:id/confirm', async (req, res) => {
     });
 
     // Reject all other pending bookings for this property
-    await Booking.updateMany(
+    const rejectedCount = await Booking.updateMany(
       {
         propertyId: booking.propertyId,
         _id: { $ne: booking._id },
@@ -221,6 +243,8 @@ router.put('/:id/confirm', async (req, res) => {
         rejectionReason: 'Property already booked by another tenant'
       }
     );
+
+    console.log(`✅ Rejected ${rejectedCount.modifiedCount} other pending bookings`);
 
     // Send notification to tenant
     if (booking.tenantId) {
@@ -240,9 +264,10 @@ router.put('/:id/confirm', async (req, res) => {
           tenant.notifications = tenant.notifications || [];
           tenant.notifications.unshift(notification);
           await tenant.save();
+          console.log('✅ Notification sent to tenant:', tenant.email);
         }
       } catch (error) {
-        console.error('Error sending notification:', error);
+        console.error('❌ Error sending notification:', error);
       }
     }
 
@@ -256,7 +281,7 @@ router.put('/:id/confirm', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error confirming booking:', error);
+    console.error('❌ Error confirming booking:', error);
     res.status(500).json({
       success: false,
       message: 'Server error',

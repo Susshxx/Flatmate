@@ -116,18 +116,53 @@ app.use('/api/contact', contactRoutes)
 app.use('/api/history', historyRoutes)
 
 // Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
-    message: 'Server is running',
-    timestamp: new Date().toISOString(),
-    env: {
-      hasGoogleClientId: !!process.env.GOOGLE_CLIENT_ID,
-      hasJwtSecret: !!process.env.JWT_SECRET,
-      hasMongoUri: !!process.env.MONGO_URI,
-      frontendUrl: process.env.FRONTEND_URL || 'not set'
+app.get('/api/health', async (req, res) => {
+  try {
+    // Test database connection
+    const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
+    
+    // Get collection counts
+    let counts = {};
+    if (dbStatus === 'connected') {
+      try {
+        const Property = (await import('./models/Property.js')).default;
+        const User = (await import('./models/User.js')).default;
+        const Booking = (await import('./models/Booking.js')).default;
+        
+        counts = {
+          properties: await Property.countDocuments(),
+          users: await User.countDocuments(),
+          bookings: await Booking.countDocuments()
+        };
+      } catch (error) {
+        console.error('Error getting counts:', error);
+      }
     }
-  });
+    
+    res.json({ 
+      status: 'ok', 
+      message: 'Server is running',
+      timestamp: new Date().toISOString(),
+      database: {
+        status: dbStatus,
+        host: mongoose.connection.host || 'not connected',
+        name: mongoose.connection.name || 'not connected',
+        collections: counts
+      },
+      env: {
+        hasGoogleClientId: !!process.env.GOOGLE_CLIENT_ID,
+        hasJwtSecret: !!process.env.JWT_SECRET,
+        hasMongoUri: !!process.env.MONGO_URI,
+        frontendUrl: process.env.FRONTEND_URL || 'not set',
+        nodeEnv: process.env.NODE_ENV || 'development'
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: error.message
+    });
+  }
 });
 
 // Test endpoint for Google auth configuration
