@@ -1082,9 +1082,9 @@ export function TenantDashboard() {
     }
   }, [user?.email, user?.name])
 
-  // Auto-refresh bookings every 3 seconds
+  // Auto-refresh bookings on events instead of polling
   useEffect(() => {
-    const interval = setInterval(() => {
+    const loadBookings = () => {
       if (!user) return
       
       try {
@@ -1113,8 +1113,21 @@ export function TenantDashboard() {
         
         setBookings(userBookings)
       } catch {}
-    }, 3000)
-    return () => clearInterval(interval)
+    }
+    
+    // Load initially
+    loadBookings()
+    
+    // Listen for booking updates
+    window.addEventListener('bookingAdded', loadBookings)
+    window.addEventListener('bookingUpdated', loadBookings)
+    window.addEventListener('storage', loadBookings)
+    
+    return () => {
+      window.removeEventListener('bookingAdded', loadBookings)
+      window.removeEventListener('bookingUpdated', loadBookings)
+      window.removeEventListener('storage', loadBookings)
+    }
   }, [user?.email, user?.name])
 
   // Reload from storage when tab becomes active or storage changes
@@ -1423,7 +1436,7 @@ export function TenantDashboard() {
                 <button onClick={() => navigate('/properties')} className="mt-4 px-6 py-2.5 bg-button-primary text-white text-sm font-bold rounded-full">Browse Properties</button>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {bookings.map((b, index) => {
                   // Alternate colors matching the stat cards: soft pink, soft blue, soft lavender, soft yellow
                   const colors = [
@@ -1442,26 +1455,109 @@ export function TenantDashboard() {
                   const textClass = textColors[index % 4]
                   
                   return (
-                <div key={b.receiptId || b.id} className={`bg-white dark:bg-gray-800 rounded-2xl p-4 border shadow-sm ${b.status === 'rejected' ? 'border-red-200 dark:border-red-800' : 'border-gray-100 dark:border-gray-700'}`}>
+                <div key={b.receiptId || b.id} className={`bg-white dark:bg-gray-800 rounded-2xl p-5 border shadow-md hover:shadow-lg transition-shadow ${b.status === 'rejected' ? 'border-red-200 dark:border-red-800' : 'border-gray-100 dark:border-gray-700'}`}>
                   <div className="flex items-start gap-4">
-                    <div className={`w-16 h-16 rounded-xl ${colorClass} flex items-center justify-center ${textClass} font-black text-xl flex-shrink-0`}>
+                    <div className={`w-20 h-20 rounded-xl ${colorClass} flex items-center justify-center ${textClass} font-black text-2xl flex-shrink-0`}>
                       {b.propertyTitle?.charAt(0) || 'P'}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-bold text-gray-900 dark:text-white text-sm">{b.propertyTitle}</p>
-                      <p className="text-gray-500 dark:text-gray-400 text-xs">Rent: NPR {b.rent?.toLocaleString()}</p>
-                      <p className="text-gray-400 dark:text-gray-500 text-xs">Owner: {b.ownerName} · Move-in: {b.moveInDate}</p>
-                      <p className="text-gray-400 dark:text-gray-500 text-xs font-mono">Receipt: {b.receiptId}</p>
+                      {/* Property Title and Location */}
+                      <div className="mb-3">
+                        <h3 className="font-bold text-gray-900 dark:text-white text-base mb-1">{b.propertyTitle}</h3>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm flex items-center gap-1">
+                          <MapPinIcon className="w-4 h-4" />
+                          {b.propertyLocation || 'Location not specified'}
+                        </p>
+                      </div>
+
+                      {/* Booking Details Grid */}
+                      <div className="grid grid-cols-2 gap-3 mb-3">
+                        {/* Check-in Date */}
+                        <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-2.5">
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Check-in</p>
+                          <p className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-1">
+                            <CalendarIcon className="w-3.5 h-3.5" />
+                            {b.checkInDate ? new Date(b.checkInDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : b.moveInDate || 'Not set'}
+                          </p>
+                        </div>
+
+                        {/* Check-out Date */}
+                        <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-2.5">
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Check-out</p>
+                          <p className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-1">
+                            <CalendarIcon className="w-3.5 h-3.5" />
+                            {b.checkOutDate ? new Date(b.checkOutDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Not set'}
+                          </p>
+                        </div>
+
+                        {/* Monthly Rent */}
+                        <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-2.5">
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Monthly Rent</p>
+                          <p className="text-sm font-bold text-button-primary">NPR {b.rent?.toLocaleString() || 'N/A'}</p>
+                        </div>
+
+                        {/* Amount Paid */}
+                        <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-2.5">
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Amount Paid</p>
+                          <p className="text-sm font-bold text-green-600 dark:text-green-400">
+                            {b.amount ? `NPR ${b.amount.toLocaleString()}` : b.paymentType === 'cash' ? 'Pay on Arrival' : 'N/A'}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Owner and Contact Info */}
+                      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-2.5 mb-3">
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Owner Details</p>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900 dark:text-white">{b.ownerName || 'Owner'}</p>
+                            {b.ownerPhone && (
+                              <p className="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-1">
+                                <PhoneIcon className="w-3 h-3" />
+                                {b.ownerPhone}
+                              </p>
+                            )}
+                          </div>
+                          {b.ownerEmail && (
+                            <button
+                              onClick={() => {
+                                setActiveTab('messages')
+                                // Find or create conversation with this owner
+                                const existingConv = conversations.find(c => 
+                                  c.ownerName === b.ownerName && c.propertyTitle === b.propertyTitle
+                                )
+                                if (existingConv) {
+                                  setSelectedConv(existingConv)
+                                }
+                              }}
+                              className="px-3 py-1.5 bg-button-primary text-white text-xs font-semibold rounded-lg hover:bg-button-primary/90 transition-colors flex items-center gap-1"
+                            >
+                              <MessageCircleIcon className="w-3.5 h-3.5" />
+                              Chat
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Receipt ID */}
+                      <p className="text-gray-400 dark:text-gray-500 text-xs font-mono mb-2">
+                        Receipt: {b.receiptId}
+                      </p>
+
+                      {/* Rejection Reason */}
                       {b.status === 'rejected' && b.rejectionReason && (
-                        <div className="mt-2 p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                          <p className="text-xs text-red-700 dark:text-red-400 font-semibold">
+                        <div className="mt-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                          <p className="text-xs text-red-700 dark:text-red-400 font-semibold flex items-center gap-1">
+                            <AlertCircleIcon className="w-4 h-4" />
                             <span className="font-bold">Rejected: </span>{b.rejectionReason}
                           </p>
                         </div>
                       )}
                     </div>
-                    <div className="flex-shrink-0 flex flex-col items-end gap-1">
-                      {/* Status Badge - GREEN for confirmed */}
+
+                    {/* Status and Actions Column */}
+                    <div className="flex-shrink-0 flex flex-col items-end gap-2">
+                      {/* Status Badge */}
                       <span 
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold rounded-full"
                         style={{
@@ -1472,31 +1568,45 @@ export function TenantDashboard() {
                       >
                         {b.status === 'confirmed' ? '✓ Confirmed' : b.status === 'rejected' ? '✗ Rejected' : '⏱ Pending'}
                       </span>
+
+                      {/* Payment Method Badge */}
+                      <span 
+                        className="text-xs font-semibold px-2.5 py-1 rounded-full"
+                        style={{
+                          backgroundColor: b.paymentMethod === 'Cash' ? '#FEF3C7' : '#DBEAFE',
+                          color: b.paymentMethod === 'Cash' ? '#92400E' : '#1E40AF'
+                        }}
+                      >
+                        {b.paymentMethod === 'Cash' ? '💵 Cash' : '💳 ' + (b.paymentMethod || 'Online')}
+                      </span>
+
                       {/* Payment Type Badge */}
                       {b.paymentType && (
                         <span 
-                          className="text-xs font-semibold px-2 py-1 rounded-full"
+                          className="text-xs font-semibold px-2.5 py-1 rounded-full"
                           style={{
                             backgroundColor: '#F3F4F6',
                             color: '#374151'
                           }}
                         >
-                          {b.paymentType === 'cash' ? '💵 Cash on Arrival' : 
-                           b.paymentType === 'advance' ? '💳 Advance 30%' : 
-                           b.paymentType === 'full' ? '💳 Full Payment' : 
+                          {b.paymentType === 'cash' ? 'On Arrival' : 
+                           b.paymentType === 'advance' ? 'Advance 30%' : 
+                           b.paymentType === 'full' ? 'Full Payment' : 
                            b.paymentType}
                         </span>
                       )}
-                      {/* Cancel Button - Only for cash on arrival */}
-                      {b.paymentType === 'cash' && b.status === 'confirmed' && (
+
+                      {/* Cancel Button - Only for pending or cash bookings */}
+                      {((b.paymentType === 'cash' && b.status === 'confirmed') || b.status === 'pending') && (
                         <button
                           onClick={() => {
                             setBookingToCancel(b)
                             setCancelModalOpen(true)
                           }}
-                          className="mt-1 px-3 py-1 text-xs font-semibold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+                          className="mt-2 px-3 py-1.5 text-xs font-semibold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 rounded-lg transition-colors flex items-center gap-1"
                         >
-                          Cancel Booking
+                          <XIcon className="w-3.5 h-3.5" />
+                          Cancel
                         </button>
                       )}
                     </div>

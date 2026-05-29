@@ -2747,9 +2747,18 @@ export function OwnerDashboard() {
 
     fetchBookings();
     
-    // Poll for booking updates every 5 seconds
-    const interval = setInterval(fetchBookings, 5000);
-    return () => clearInterval(interval);
+    // Listen for booking updates instead of polling
+    const handleBookingUpdate = () => {
+      fetchBookings();
+    };
+    
+    window.addEventListener('bookingAdded', handleBookingUpdate);
+    window.addEventListener('bookingUpdated', handleBookingUpdate);
+    
+    return () => {
+      window.removeEventListener('bookingAdded', handleBookingUpdate);
+      window.removeEventListener('bookingUpdated', handleBookingUpdate);
+    };
   }, [user]);
 
   // Calculate message unread count
@@ -2834,18 +2843,19 @@ export function OwnerDashboard() {
     const initialTenants = syncBookingsToTenants()
     setTenants([...initialTenants, ...INIT_TENANTS])
     
-    const id = setInterval(() => {
-      setBookings(ls('fm_bookings'))
-      
-      // Sync bookings to tenants on each refresh
+    // Listen for booking updates to sync tenants
+    const handleBookingUpdate = () => {
       const syncedTenants = syncBookingsToTenants()
-      // Only use synced tenants from localStorage, don't re-add INIT_TENANTS
       setTenants(syncedTenants)
-
-      // Notifications are now fetched from backend via separate useEffect
-      // Don't reset properties here - they're managed by the dedicated useEffect
-    }, 5000)
-    return () => clearInterval(id)
+    };
+    
+    window.addEventListener('bookingAdded', handleBookingUpdate);
+    window.addEventListener('bookingUpdated', handleBookingUpdate);
+    
+    return () => {
+      window.removeEventListener('bookingAdded', handleBookingUpdate);
+      window.removeEventListener('bookingUpdated', handleBookingUpdate);
+    };
   }, [])
   
   // Auto-mark notifications as read when visiting notifications tab
