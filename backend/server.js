@@ -90,10 +90,11 @@ app.use(cors({
 }))
 
 // Remove payload size limit for image uploads
-app.use(express.json({ limit: 'infinity' }));
-app.use(express.urlencoded({ limit: 'infinity', extended: true }));
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ limit: '100mb', extended: true }));
 
 app.use('/auth', authRoutes);
+app.use('/api/auth', authRoutes);
 app.use('/reviews', reviewRoutes);
 app.use('/api/payment/khalti', khaltiRoutes);
 app.use('/api/bookings', bookingRoutes);
