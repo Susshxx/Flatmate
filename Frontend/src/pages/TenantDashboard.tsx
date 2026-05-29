@@ -57,6 +57,7 @@ import { useFavorites } from '../contexts/FavoritesContext'
 import { generateOwnerResponse, simulateTypingDelay } from '../utils/chatbot'
 import { getChats, getOrCreateChat, sendMessage, markChatAsSeen, Chat } from '../utils/chatStorage'
 import { toast } from '../utils/toast'
+import { initializeStorageCleanup } from '../utils/cleanupStorage'
 
 import { BACKEND_URL } from '../config/api'
 
@@ -880,6 +881,11 @@ function DisplayPreferencesPanel() {
 export function TenantDashboard() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  
+  // Initialize storage cleanup on component mount
+  useEffect(() => {
+    initializeStorageCleanup()
+  }, [])
   const { user, logout } = useAuth()
   const { favorites, clearAll: clearFavorites } = useFavorites()
 
