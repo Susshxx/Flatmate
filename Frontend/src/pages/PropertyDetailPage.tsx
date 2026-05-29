@@ -806,14 +806,20 @@ export function PropertyDetailPage() {
           .filter(p => p.id !== id && (p.location === found.location || p.type === found.type))
           .slice(0, 9)
         setRecommended(recs)
+        setLoading(false)
       } else {
+        console.error('Property not found with id:', id)
         toast.error('Property not found')
+        setLoading(false)
         navigate('/properties')
       }
-      setLoading(false)
     }
 
-    load()
+    load().catch(error => {
+      console.error('Error loading property:', error)
+      setLoading(false)
+      toast.error('Failed to load property')
+    })
   }, [id, navigate])
 
   // ── Booking handlers ───────────────────────────────────────────────────────
@@ -1042,6 +1048,23 @@ export function PropertyDetailPage() {
         <div className="text-center">
           <BuildingIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <p className="text-gray-600">Property not found</p>
+          <button
+            onClick={() => navigate('/properties')}
+            className="mt-4 px-6 py-2.5 bg-button-primary text-white font-semibold rounded-xl"
+          >Back to Properties</button>
+        </div>
+      </div>
+    )
+  }
+
+  // Defensive check - ensure property has required fields
+  if (!property.title || !property.location) {
+    console.error('Property missing required fields:', property)
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <BuildingIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-600">Property data incomplete</p>
           <button
             onClick={() => navigate('/properties')}
             className="mt-4 px-6 py-2.5 bg-button-primary text-white font-semibold rounded-xl"
