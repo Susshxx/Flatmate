@@ -6,9 +6,13 @@ const router = express.Router();
 // POST /api/properties - Create new property
 router.post('/', async (req, res) => {
   try {
+    console.log('📝 Creating new property:', req.body.title);
+    
     const { title, location, latitude, longitude, rent, beds, baths, type, area, furnishing, parking, wifi, description, amenities, image, images, ownerName, ownerId, ownerEmail, ownerPhone, isPremium } = req.body;
 
+    // Validate required fields
     if (!title || !location || !rent || !type || !area || !ownerName || !ownerId) {
+      console.error('❌ Missing required fields:', { title: !!title, location: !!location, rent: !!rent, type: !!type, area: !!area, ownerName: !!ownerName, ownerId: !!ownerId });
       return res.status(400).json({ success: false, message: 'Missing required fields' });
     }
 
@@ -42,16 +46,19 @@ router.post('/', async (req, res) => {
       status: 'pending'
     });
 
-    console.log('Property created with coordinates:', {
+    console.log('✅ Property created successfully:', {
       id: property._id,
       title: property.title,
+      status: property.status,
+      ownerId: property.ownerId,
+      ownerName: property.ownerName,
       latitude: property.latitude,
       longitude: property.longitude
     });
 
     res.status(201).json({ 
       success: true,
-      message: 'Property submitted for review', 
+      message: 'Property submitted for admin review. You will be notified once approved.', 
       property: {
         id: property._id.toString(),
         _id: property._id.toString(),
@@ -59,7 +66,7 @@ router.post('/', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error creating property:', error);
+    console.error('❌ Error creating property:', error);
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 });
@@ -72,6 +79,8 @@ router.get('/all', async (req, res) => {
     const limit = parseInt(req.query.limit) || 100;
     const skip = (page - 1) * limit;
 
+    console.log('📋 Admin fetching all properties (page:', page, ')');
+
     const properties = await Property.find({})
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -79,6 +88,8 @@ router.get('/all', async (req, res) => {
       .lean(); // Use lean() for faster reads
 
     const total = await Property.countDocuments({});
+
+    console.log(`✅ Admin query returned ${properties.length} properties (total: ${total})`);
 
     res.json({
       success: true,
@@ -95,7 +106,56 @@ router.get('/all', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error fetching all properties:', error);
+    console.error('❌ Error fetching all properties:', error);
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+});
+
+// GET /api/properties/approved - Get only approved properties (for public)
+router.get('/approved', async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    const skip = (page - 1) * limit;
+    const { type, location } = req.query;
+
+    console.log('📋 Public fetching approved properties');
+
+    let query = { status: 'approved' };
+    
+    if (type) {
+      query.type = type;
+    }
+    if (location) {
+      query.location = { $regex: location, $options: 'i' };
+    }
+
+    const properties = await Property.find(query)
+      .sort({ isPremium: -1, createdAt: -1 }) // Premium first, then newest
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    const total = await Property.countDocuments(query);
+
+    console.log(`✅ Public query returned ${properties.length} approved properties (total: ${total})`);
+
+    res.json({
+      success: true,
+      properties: properties.map(p => ({
+        id: p._id.toString(),
+        _id: p._id.toString(),
+        ...p
+      })),
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    console.error('❌ Error fetching approved properties:', error);
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 });
@@ -103,8 +163,10 @@ router.get('/all', async (req, res) => {
 // GET /api/properties - Get properties (with filters)
 router.get('/', async (req, res) => {
   try {
-    const { status, ownerId, ownerName, page = 1, limit = 50 } = req.query;
+    const { status, ownerId, ownerName, type, location, page = 1, limit = 50 } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
+    
+    console.log('📋 Fetching properties with filters:', { status, ownerId, ownerName, type, location, page, limit });
     
     let query = {};
     
@@ -113,14 +175,27 @@ router.get('/', async (req, res) => {
       query.status = status;
     } else if (!ownerId && !ownerName) {
       query.status = 'approved';
+      console.log('🔍 Public query - showing only approved properties');
     }
     
     // Filter by owner
     if (ownerId) {
       query.ownerId = ownerId;
+      console.log('🔍 Filtering by ownerId:', ownerId);
     }
     if (ownerName) {
       query.ownerName = ownerName;
+      console.log('🔍 Filtering by ownerName:', ownerName);
+    }
+    
+    // Filter by type
+    if (type) {
+      query.type = type;
+    }
+    
+    // Filter by location
+    if (location) {
+      query.location = { $regex: location, $options: 'i' };
     }
     
     const properties = await Property.find(query)
@@ -130,6 +205,8 @@ router.get('/', async (req, res) => {
       .lean(); // Use lean() for faster reads
 
     const total = await Property.countDocuments(query);
+    
+    console.log(`✅ Found ${properties.length} properties (total: ${total})`);
     
     res.json({
       success: true,
@@ -146,7 +223,7 @@ router.get('/', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error fetching properties:', error);
+    console.error('❌ Error fetching properties:', error);
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 });
