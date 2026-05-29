@@ -43,7 +43,14 @@ export function PropertyCard({
         if (response.ok && isMounted) {
           const data = await response.json()
           if (data.success && data.bookings && Array.isArray(data.bookings)) {
-            const activeBooking = data.bookings.find((b: any) => 
+            // Filter out sample/dummy bookings
+            const realBookings = data.bookings.filter((b: any) => 
+              !b.receiptId?.startsWith('BK-SAMPLE') && 
+              !b.receiptId?.startsWith('BK-REJ-') &&
+              !b.receiptId?.startsWith('BK-DUMMY')
+            )
+            
+            const activeBooking = realBookings.find((b: any) => 
               b.status === 'confirmed' || b.status === 'pending'
             )
             
@@ -88,7 +95,14 @@ export function PropertyCard({
         if (response.ok && isMounted) {
           const data = await response.json()
           if (data.success && data.bookings && Array.isArray(data.bookings)) {
-            const activeBooking = data.bookings.find((b: any) => 
+            // Filter out sample/dummy bookings
+            const realBookings = data.bookings.filter((b: any) => 
+              !b.receiptId?.startsWith('BK-SAMPLE') && 
+              !b.receiptId?.startsWith('BK-REJ-') &&
+              !b.receiptId?.startsWith('BK-DUMMY')
+            )
+            
+            const activeBooking = realBookings.find((b: any) => 
               b.status === 'confirmed' || b.status === 'pending'
             )
             
