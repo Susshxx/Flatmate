@@ -2948,7 +2948,10 @@ export function OwnerDashboard() {
         toast.error('Failed to update property');
       }
     } else {
-      // Property is already created in the modal, just refresh the list
+      // Immediately add the new property to the state (optimistic update)
+      setProperties(prev => [newProp, ...prev]);
+      
+      // Also refresh from backend to ensure sync
       if (user) {
         const props = await getProperties({ ownerName: user.name });
         setProperties(props);
