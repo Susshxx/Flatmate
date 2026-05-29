@@ -1082,75 +1082,37 @@ export function TenantDashboard() {
     }
   }, [user?.email, user?.name])
 
-  // Fetch bookings from backend API instead of localStorage
+  // Auto-refresh bookings on events instead of polling
   useEffect(() => {
-    const loadBookings = async () => {
-      if (!user || !user.email) return
+    const loadBookings = () => {
+      if (!user) return
       
       try {
-        // Get user ID from email
-        const userResponse = await fetch(`${BACKEND_URL}/api/users/email/${user.email}`)
-        if (!userResponse.ok) {
-          console.error('Failed to fetch user data for bookings')
-          setBookings([])
-          return
-        }
-        const userData = await userResponse.json()
-        const userId = userData.user.id || userData.user._id
-
-        // Fetch bookings for this tenant from backend
-        const bookingsResponse = await fetch(`${BACKEND_URL}/api/bookings?tenantId=${userId}`)
-        if (!bookingsResponse.ok) {
-          console.error('Failed to fetch bookings from backend')
-          setBookings([])
-          return
-        }
-        const bookingsData = await bookingsResponse.json()
+        const allBookings = JSON.parse(localStorage.getItem('fm_bookings') || '[]')
         
-        if (bookingsData.success && bookingsData.bookings) {
-          // Transform backend bookings to match frontend format
-          const transformedBookings = await Promise.all(bookingsData.bookings.map(async (b: any) => {
-            // Fetch owner verification status
-            let ownerIsVerified = false
-            if (b.ownerId) {
-              try {
-                const ownerResponse = await fetch(`${BACKEND_URL}/api/users/${b.ownerId}`)
-                if (ownerResponse.ok) {
-                  const ownerData = await ownerResponse.json()
-                  ownerIsVerified = ownerData.user?.isVerified || false
-                }
-              } catch (error) {
-                console.error('Failed to fetch owner verification status:', error)
-              }
-            }
-            
-            return {
-              ...b,
-              id: b._id || b.id,
-              customerName: b.tenantName,
-              customerEmail: b.tenantEmail,
-              customerPhone: b.tenantPhone,
-              bookedAt: b.createdAt,
-              ownerIsVerified,
-            }
-          }))
-          
-          // Sort by creation date (newest first)
-          transformedBookings.sort((a: any, b: any) => {
-            const dateA = new Date(a.createdAt || a.bookedAt || 0).getTime()
-            const dateB = new Date(b.createdAt || b.bookedAt || 0).getTime()
-            return dateB - dateA
-          })
-          
-          setBookings(transformedBookings)
-          console.log('Fetched tenant bookings from backend:', transformedBookings.length)
-        } else {
-          setBookings([])
-        }
-      } catch (error) {
-        console.error('Error fetching tenant bookings:', error)
-        setBookings([])
-      }
+        // Remove specific unwanted bookings by receipt ID
+        const unwantedReceipts = ['KH-MO2QO1EF-J7TL', 'KH-MO2I8FBG-2EEH', 'KH-MNVG5G4L-R9Z1']
+        
+        // Remove sample bookings and unwanted bookings
+        const cleanedBookings = allBookings.filter((b: any) => 
+          !b.receiptId?.startsWith('BK-SAMPLE') && !unwantedReceipts.includes(b.receiptId)
+        )
+        
+        const userBookings = cleanedBookings.filter((b: any) => {
+          const emailMatch = user.email && b.customerEmail?.toLowerCase() === user.email.toLowerCase()
+          const nameMatch = user.name && b.customerName?.toLowerCase().includes(user.name.toLowerCase())
+          return emailMatch || nameMatch
+        })
+        
+        // Sort by creation date (newest first)
+        userBookings.sort((a: any, b: any) => {
+          const dateA = new Date(a.createdAt || a.bookedAt || 0).getTime()
+          const dateB = new Date(b.createdAt || b.bookedAt || 0).getTime()
+          return dateB - dateA
+        })
+        
+        setBookings(userBookings)
+      } catch {}
     }
     
     // Load initially
@@ -1159,12 +1121,14 @@ export function TenantDashboard() {
     // Listen for booking updates
     window.addEventListener('bookingAdded', loadBookings)
     window.addEventListener('bookingUpdated', loadBookings)
+    window.addEventListener('storage', loadBookings)
     
     return () => {
       window.removeEventListener('bookingAdded', loadBookings)
       window.removeEventListener('bookingUpdated', loadBookings)
+      window.removeEventListener('storage', loadBookings)
     }
-  }, [user?.email])
+  }, [user?.email, user?.name])
 
   // Reload from storage when tab becomes active or storage changes
   useEffect(() => {
@@ -1546,15 +1510,7 @@ export function TenantDashboard() {
                         <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Owner Details</p>
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-1.5">
-                              {b.ownerName || 'Owner'}
-                              {/* Verification Badge - Check if owner is verified */}
-                              {b.ownerIsVerified && (
-                                <span className="inline-flex" title="Verified Owner">
-                                  <ShieldCheckIcon className="w-4 h-4 text-blue-600 fill-blue-600" />
-                                </span>
-                              )}
-                            </p>
+                            <p className="text-sm font-semibold text-gray-900 dark:text-white">{b.ownerName || 'Owner'}</p>
                             {b.ownerPhone && (
                               <p className="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-1">
                                 <PhoneIcon className="w-3 h-3" />
