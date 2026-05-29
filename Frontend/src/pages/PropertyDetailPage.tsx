@@ -740,8 +740,6 @@ export function PropertyDetailPage() {
       setLoading(true)
 
       // 1. Try backend first
-      // ── FIX: was `/api/properties/${id}` (relative URL → hits Vite dev server
-      //         or the frontend static server on Render, NOT the backend)
       try {
         const res = await fetch(`${BACKEND_URL}/api/properties/${id}`, {
           signal: AbortSignal.timeout(4000),
@@ -771,8 +769,10 @@ export function PropertyDetailPage() {
               ownerName:    p.ownerName || 'Property Owner',
               ownerEmail:   p.ownerEmail || '',
               ownerPhone:   p.ownerPhone || '',
+              ownerId:      p.ownerId || '',
             }
             setProperty(normalized)
+            console.log('Property loaded successfully:', normalized.id, normalized.title)
 
             // Recommended from backend
             try {
