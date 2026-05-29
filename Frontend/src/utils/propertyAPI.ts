@@ -294,21 +294,3 @@ export async function rejectProperty(id: string, reason?: string): Promise<Prope
     return null
   }
 }
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ reason }),
-    })
-
-    if (!response.ok) {
-      console.error('Failed to reject property:', response.statusText)
-      return null
-    }
-
-    const data = await response.json()
-    return data.property || data || null
-  } catch (error) {
-    console.error('Error rejecting property:', error)
-    return null
-  }
-}
