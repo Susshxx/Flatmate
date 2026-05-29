@@ -268,21 +268,24 @@ export function PropertiesPage() {
     if (pr)  setPriceRange(pr)
   }, [searchParams.toString()])
 
-  // Fetch approved properties from backend
+  // Fetch approved properties from backend with pagination
   useEffect(() => {
     const fetchProperties = async () => {
       try {
-        // Fetch only approved properties from backend
-        const response = await fetch(`${BACKEND_URL}/api/properties?status=approved`);
+        // Fetch approved properties with pagination (50 per page)
+        const response = await fetch(
+          `${BACKEND_URL}/api/properties?status=approved&page=1&limit=50`
+        );
         if (response.ok) {
           const data = await response.json();
           setOwnerProperties(data.properties || []);
+          console.log('✅ Loaded', data.properties?.length || 0, 'approved properties');
         } else {
-          console.error('Failed to fetch properties from backend');
+          console.error('❌ Failed to fetch properties from backend');
           setOwnerProperties([]);
         }
       } catch (error) {
-        console.error('Error fetching properties:', error);
+        console.error('❌ Error fetching properties:', error);
         setOwnerProperties([]);
       } finally {
         setLoading(false);
@@ -290,8 +293,8 @@ export function PropertiesPage() {
     };
 
     fetchProperties();
-    // Check for updates every 5 seconds
-    const interval = setInterval(fetchProperties, 5000);
+    // Check for updates every 30 seconds (reduced from 5 seconds with pagination)
+    const interval = setInterval(fetchProperties, 30000);
     return () => clearInterval(interval);
   }, []);
 

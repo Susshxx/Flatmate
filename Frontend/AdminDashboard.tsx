@@ -683,20 +683,22 @@ function AdminPropertiesPanel({ users, blockedOwners, onBlockUser }: { users: an
     setGalleryOpen(true);
   };
 
-  // Fetch all properties from backend
+  // Fetch all properties from backend with pagination
   useEffect(() => {
     const fetchProperties = async () => {
       try {
-        const response = await fetch(`${BACKEND_URL}/api/properties/all`);
+        // Fetch all properties with pagination (100 per page for admin)
+        const response = await fetch(`${BACKEND_URL}/api/properties/all?page=1&limit=100`);
         if (response.ok) {
           const data = await response.json();
           setProperties(data.properties || []);
+          console.log('✅ Loaded', data.properties?.length || 0, 'properties for admin review');
         } else {
-          console.error('Failed to fetch properties from backend');
+          console.error('❌ Failed to fetch properties from backend');
           setProperties([]);
         }
       } catch (error) {
-        console.error('Error fetching properties:', error);
+        console.error('❌ Error fetching properties:', error);
         setProperties([]);
       } finally {
         setLoading(false);
@@ -704,8 +706,8 @@ function AdminPropertiesPanel({ users, blockedOwners, onBlockUser }: { users: an
     };
 
     fetchProperties();
-    // Poll every 5 seconds for updates
-    const interval = setInterval(fetchProperties, 5000);
+    // Poll every 15 seconds for updates (reduced from 5 seconds with pagination)
+    const interval = setInterval(fetchProperties, 15000);
     return () => clearInterval(interval);
   }, []);
 
@@ -1557,14 +1559,16 @@ export function AdminDashboard() {
     }
   }, [user])
 
-  // Fetch properties for overview stats
+  // Fetch properties for overview stats with pagination
   useEffect(() => {
     const fetchProperties = async () => {
       try {
-        const response = await fetch(`${BACKEND_URL}/api/properties/all`)
+        // Fetch with pagination for overview stats (100 per page)
+        const response = await fetch(`${BACKEND_URL}/api/properties/all?page=1&limit=100`)
         if (response.ok) {
           const data = await response.json()
           setProperties(data.properties || [])
+          console.log('✅ Fetched properties for admin stats');
         }
       } catch (error) {
         console.error('❌ Properties fetch error:', error)

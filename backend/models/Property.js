@@ -39,8 +39,26 @@ const propertySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// CRITICAL: Add compound indexes for fast queries
+// Index for filtering approved properties
 propertySchema.index({ status: 1, createdAt: -1 });
-propertySchema.index({ ownerId: 1 });
+
+// Index for owner's properties queries
+propertySchema.index({ ownerId: 1, createdAt: -1 });
+
+// Index for owner name queries
 propertySchema.index({ ownerName: 1 });
+
+// Index for location-based queries
+propertySchema.index({ location: 1, status: 1 });
+
+// Index for premium listings
+propertySchema.index({ isPremium: 1, status: 1 });
+
+// Index for type filtering
+propertySchema.index({ type: 1, status: 1 });
+
+// TTL index for rejected/pending properties (optional - keeps database clean)
+// propertySchema.index({ createdAt: 1 }, { expireAfterSeconds: 7776000 }); // 90 days
 
 export default mongoose.model('Property', propertySchema);

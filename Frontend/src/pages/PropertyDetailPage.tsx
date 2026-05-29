@@ -786,9 +786,10 @@ export function PropertyDetailPage() {
             setProperty(normalized)
             console.log('Property loaded successfully:', normalized.id, normalized.title)
 
-            // Recommended from backend
+            // Recommended from backend with pagination
             try {
-              const allRes = await fetch(`${BACKEND_URL}/api/properties`)
+              // Fetch approved properties for recommendations (page 1, limit 20 to get enough for filtering)
+              const allRes = await fetch(`${BACKEND_URL}/api/properties?status=approved&page=1&limit=20`)
               if (allRes.ok) {
                 const allData = await allRes.json()
                 const recs = (allData.properties || [])
@@ -800,6 +801,7 @@ export function PropertyDetailPage() {
                     bedrooms: x.beds || x.bedrooms || 1,
                     bathrooms: x.baths || x.bathrooms || 1,
                   }))
+                console.log('✅ Loaded', recs.length, 'recommended properties');
                 setRecommended(recs)
               }
             } catch { /* ignore */ }

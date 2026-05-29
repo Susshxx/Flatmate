@@ -64,10 +64,47 @@ router.post('/', async (req, res) => {
   }
 });
 
+// IMPORTANT: /all route MUST come before /:id route to prevent "all" being treated as an ID
+// GET /api/properties/all - Get all properties (for admin)
+router.get('/all', async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 100;
+    const skip = (page - 1) * limit;
+
+    const properties = await Property.find({})
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean(); // Use lean() for faster reads
+
+    const total = await Property.countDocuments({});
+
+    res.json({
+      success: true,
+      properties: properties.map(p => ({
+        id: p._id.toString(),
+        _id: p._id.toString(),
+        ...p
+      })),
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching all properties:', error);
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+});
+
 // GET /api/properties - Get properties (with filters)
 router.get('/', async (req, res) => {
   try {
-    const { status, ownerId, ownerName } = req.query;
+    const { status, ownerId, ownerName, page = 1, limit = 50 } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
     
     let query = {};
     
@@ -86,15 +123,27 @@ router.get('/', async (req, res) => {
       query.ownerName = ownerName;
     }
     
-    const properties = await Property.find(query).sort({ createdAt: -1 });
+    const properties = await Property.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit))
+      .lean(); // Use lean() for faster reads
+
+    const total = await Property.countDocuments(query);
     
     res.json({
       success: true,
       properties: properties.map(p => ({
         id: p._id.toString(),
         _id: p._id.toString(),
-        ...p.toObject()
-      }))
+        ...p
+      })),
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / parseInt(limit))
+      }
     });
   } catch (error) {
     console.error('Error fetching properties:', error);
@@ -102,29 +151,20 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /api/properties/all - Get all properties (for admin)
-router.get('/all', async (req, res) => {
-  try {
-    const properties = await Property.find({}).sort({ createdAt: -1 });
-    res.json({
-      success: true,
-      properties: properties.map(p => ({
-        id: p._id.toString(),
-        _id: p._id.toString(),
-        ...p.toObject()
-      }))
-    });
-  } catch (error) {
-    console.error('Error fetching all properties:', error);
-    res.status(500).json({ success: false, message: 'Server error', error: error.message });
-  }
-});
-
 // GET /api/properties/:id - Get single property
 router.get('/:id', async (req, res) => {
   try {
-    const property = await Property.findById(req.params.id);
+    // Validate MongoDB ObjectId format to avoid false matches
+    const { id } = req.params;
+    
+    // Check if id looks like a MongoDB ObjectId (24 hex characters)
+    if (!/^[0-9a-fA-F]{24}$/.test(id)) {
+      return res.status(400).json({ success: false, message: 'Invalid property ID format' });
+    }
+
+    const property = await Property.findById(id).lean();
     if (!property) {
+      console.warn(`Property not found for ID: ${id}`);
       return res.status(404).json({ success: false, message: 'Property not found' });
     }
     res.json({
@@ -132,7 +172,7 @@ router.get('/:id', async (req, res) => {
       property: {
         id: property._id.toString(),
         _id: property._id.toString(),
-        ...property.toObject()
+        ...property
       }
     });
   } catch (error) {
@@ -144,14 +184,21 @@ router.get('/:id', async (req, res) => {
 // PUT /api/properties/:id - Update property
 router.put('/:id', async (req, res) => {
   try {
-    const property = await Property.findById(req.params.id);
+    const { id } = req.params;
+    
+    // Validate MongoDB ObjectId format
+    if (!/^[0-9a-fA-F]{24}$/.test(id)) {
+      return res.status(400).json({ success: false, message: 'Invalid property ID format' });
+    }
+
+    const property = await Property.findById(id);
     
     if (!property) {
       return res.status(404).json({ success: false, message: 'Property not found' });
     }
 
     const updatedProperty = await Property.findByIdAndUpdate(
-      req.params.id,
+      id,
       { $set: req.body },
       { new: true, runValidators: true }
     );
@@ -176,8 +223,15 @@ router.put('/:id', async (req, res) => {
 // PUT /api/properties/:id/approve - Approve property
 router.put('/:id/approve', async (req, res) => {
   try {
+    const { id } = req.params;
+    
+    // Validate MongoDB ObjectId format
+    if (!/^[0-9a-fA-F]{24}$/.test(id)) {
+      return res.status(400).json({ success: false, message: 'Invalid property ID format' });
+    }
+
     const property = await Property.findByIdAndUpdate(
-      req.params.id,
+      id,
       { status: 'approved', rejectionReason: '' },
       { new: true }
     );
@@ -206,7 +260,7 @@ router.put('/:id/approve', async (req, res) => {
           };
 
           owner.notifications = owner.notifications || [];
-          owner.notifications.unshift(notification); // Add to beginning
+          owner.notifications.unshift(notification);
           await owner.save();
 
           console.log('✅ Notification sent to owner:', owner.email, 'Total notifications:', owner.notifications.length);
@@ -241,10 +295,16 @@ router.put('/:id/approve', async (req, res) => {
 // PUT /api/properties/:id/reject - Reject property
 router.put('/:id/reject', async (req, res) => {
   try {
+    const { id } = req.params;
     const { reason } = req.body;
 
+    // Validate MongoDB ObjectId format
+    if (!/^[0-9a-fA-F]{24}$/.test(id)) {
+      return res.status(400).json({ success: false, message: 'Invalid property ID format' });
+    }
+
     const property = await Property.findByIdAndUpdate(
-      req.params.id,
+      id,
       { status: 'rejected', rejectionReason: reason || 'Not specified' },
       { new: true }
     );
@@ -273,7 +333,7 @@ router.put('/:id/reject', async (req, res) => {
           };
 
           owner.notifications = owner.notifications || [];
-          owner.notifications.unshift(notification); // Add to beginning
+          owner.notifications.unshift(notification);
           await owner.save();
 
           console.log('✅ Rejection notification sent to owner:', owner.email, 'Total notifications:', owner.notifications.length);
@@ -292,7 +352,7 @@ router.put('/:id/reject', async (req, res) => {
 
     res.json({ 
       success: true,
-      message: 'Property rejected', 
+      message: 'Property rejected successfully', 
       property: {
         id: property._id.toString(),
         _id: property._id.toString(),
@@ -308,7 +368,14 @@ router.put('/:id/reject', async (req, res) => {
 // DELETE /api/properties/:id - Delete property
 router.delete('/:id', async (req, res) => {
   try {
-    const property = await Property.findById(req.params.id);
+    const { id } = req.params;
+    
+    // Validate MongoDB ObjectId format
+    if (!/^[0-9a-fA-F]{24}$/.test(id)) {
+      return res.status(400).json({ success: false, message: 'Invalid property ID format' });
+    }
+
+    const property = await Property.findById(id);
     
     if (!property) {
       return res.status(404).json({ success: false, message: 'Property not found' });
@@ -317,9 +384,9 @@ router.delete('/:id', async (req, res) => {
     const propertyTitle = property.title;
     const ownerName = property.ownerName;
 
-    await Property.findByIdAndDelete(req.params.id);
+    await Property.findByIdAndDelete(id);
 
-    console.log('Property deleted:', req.params.id);
+    console.log('Property deleted:', id);
 
     res.json({ 
       success: true,
@@ -328,7 +395,7 @@ router.delete('/:id', async (req, res) => {
         type: 'property_deleted',
         title: 'Property Deleted',
         message: `${ownerName} deleted property: "${propertyTitle}"`,
-        propertyId: req.params.id
+        propertyId: id
       }
     });
   } catch (error) {

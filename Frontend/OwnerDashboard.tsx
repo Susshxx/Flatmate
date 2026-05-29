@@ -1,4 +1,4 @@
-/**
+﻿/**
  * OWNER DASHBOARD - Main dashboard interface for property owners/landlords
  * 
  * PURPOSE:
@@ -44,7 +44,7 @@
  * - notifs: Stored in localStorage under `fm_owner_notifs`
  */
 
-// src/pages/OwnerDashboard.tsx — PROFESSIONAL REBUILD
+// src/pages/OwnerDashboard.tsx â€” PROFESSIONAL REBUILD
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
@@ -71,7 +71,7 @@ import { getProperties, createProperty, updateProperty, deleteProperty, Property
 import { OwnerHistorySection } from './src/components/OwnerHistorySection'
 
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const ls     = (k: string, fb = '[]') => { try { return JSON.parse(localStorage.getItem(k) || fb) } catch { return JSON.parse(fb) } }
 const setLS  = (k: string, v: any)   => { try { localStorage.setItem(k, JSON.stringify(v)) } catch {} }
 const fmtNPR = (n: number) => `NPR ${n.toLocaleString()}`
@@ -82,7 +82,7 @@ const daysSince = (d: string) => {
   return `${diff}d ago`
 }
 
-// ─── Soft pastel tokens ───────────────────────────────────────────────────────
+// â”€â”€â”€ Soft pastel tokens â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const PASTELS = {
   blue:   { bg: 'bg-blue-50',   border: 'border-blue-100',   icon: 'bg-blue-100 text-blue-600',    val: 'text-blue-700'   },
   pink:   { bg: 'bg-pink-50',   border: 'border-pink-100',   icon: 'bg-pink-100 text-pink-600',    val: 'text-pink-700'   },
@@ -92,7 +92,7 @@ const PASTELS = {
   teal:   { bg: 'bg-teal-50',   border: 'border-teal-100',   icon: 'bg-teal-100 text-teal-600',    val: 'text-teal-700'   },
 }
 
-// ─── Mock Data ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Mock Data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const daysAgo = (n: number) => new Date(Date.now() - n * 86400000).toISOString().split('T')[0]
 
 const INIT_PROPERTIES: any[] = []
@@ -136,7 +136,7 @@ const INIT_NOTIFS = [
   { id: 'n5', title: 'New Review',         msg: 'Anita Thapa left a 5-star review',            time: '3d ago',  ts: Date.now() - 259200000, type: 'success', read: true  },
 ]
 
-// ─── Empty form ───────────────────────────────────────────────────────────────
+// â”€â”€â”€ Empty form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const EMPTY_FORM = { 
   ownerName: '', 
   ownerContact: '', 
@@ -162,7 +162,7 @@ const PROP_TYPES = ['Apartment', 'House', 'Flat', 'Studio', 'Room', 'Villa']
 const FURNISHINGS = ['Unfurnished', 'Semi-furnished', 'Fully furnished']
 const AMENITIES_LIST = ['WiFi', 'Parking', 'Balcony', 'CCTV', 'Generator', 'Water Purifier', 'Gas', 'Laundry', 'Gym', 'Swimming Pool', 'Garden', 'Elevator']
 
-// ─── Chart primitives ─────────────────────────────────────────────────────────
+// â”€â”€â”€ Chart primitives â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function AreaChart({ data, h = 80 }: { data: typeof MONTHLY_REV; h?: number }) {
   const maxR = Math.max(...data.map(d => d.revenue))
   const W = 300
@@ -260,7 +260,7 @@ function MiniCalendar() {
   )
 }
 
-// ─── Stat Card ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Stat Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function StatCard({ icon: Icon, value, label, trend, pastel, sub, onClick }: any) {
   const p = PASTELS[pastel as keyof typeof PASTELS] || PASTELS.blue
   return (
@@ -277,7 +277,7 @@ function StatCard({ icon: Icon, value, label, trend, pastel, sub, onClick }: any
   )
 }
 
-// ─── Add Property Modal ────────────────────────────────────────────────────────
+// â”€â”€â”€ Add Property Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function AddPropertyModal({ onClose, onAdd, editingProperty }: { onClose: () => void; onAdd: (p: any) => void; editingProperty?: any }) {
   const [form, setForm] = useState(editingProperty || EMPTY_FORM)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -331,7 +331,7 @@ function AddPropertyModal({ onClose, onAdd, editingProperty }: { onClose: () => 
       let userId = currentUser?.id;
       if (!userId && currentUser?.email) {
         try {
-          const userResponse = await fetch(`https://sumedha2408480-flat-mate-backend.onrender.com/api/users/email/${encodeURIComponent(currentUser.email)}`);
+          const userResponse = await fetch(`${BACKEND_URL}/api/users/email/${encodeURIComponent(currentUser.email)}`);
           if (userResponse.ok) {
             const userData = await userResponse.json();
             userId = userData.user.id || userData.user._id;
@@ -604,14 +604,14 @@ function AddPropertyModal({ onClose, onAdd, editingProperty }: { onClose: () => 
                             
                             // Add OpenStreetMap tiles
                             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                              attribution: '© OpenStreetMap contributors',
+                              attribution: 'Â© OpenStreetMap contributors',
                               maxZoom: 19
                             }).addTo(map);
                             
                             // Custom marker icon
                             const markerIcon = L.divIcon({
                               html: `<div style="width:32px;height:32px;background:linear-gradient(135deg,#ef4444,#dc2626);border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid white;box-shadow:0 4px 12px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;">
-                                <div style="transform:rotate(45deg);font-size:16px;">📍</div>
+                                <div style="transform:rotate(45deg);font-size:16px;">ðŸ“</div>
                               </div>`,
                               className: '',
                               iconSize: [32, 32],
@@ -632,7 +632,7 @@ function AddPropertyModal({ onClose, onAdd, editingProperty }: { onClose: () => 
                                 latitude: position.lat, 
                                 longitude: position.lng 
                               }));
-                              toast.success('📍 Location updated by dragging!');
+                              toast.success('ðŸ“ Location updated by dragging!');
                             });
                             
                             // Update marker when clicking on map
@@ -667,7 +667,7 @@ function AddPropertyModal({ onClose, onAdd, editingProperty }: { onClose: () => 
                       }}
                     />
                     <div className="absolute top-2 left-2 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg text-[10px] font-semibold text-gray-700 z-[1000] border border-gray-200">
-                      💡 Drag the pin or click anywhere to set location
+                      ðŸ’¡ Drag the pin or click anywhere to set location
                     </div>
                   </div>
                   
@@ -675,7 +675,7 @@ function AddPropertyModal({ onClose, onAdd, editingProperty }: { onClose: () => 
                     <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg flex items-start gap-2">
                       <CheckCircleIcon className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
                       <div className="flex-1">
-                        <p className="text-[11px] text-green-700 font-bold mb-0.5">✓ Location Set Successfully</p>
+                        <p className="text-[11px] text-green-700 font-bold mb-0.5">âœ“ Location Set Successfully</p>
                         <p className="text-[10px] text-green-600">
                           Coordinates: {form.latitude.toFixed(6)}, {form.longitude.toFixed(6)}
                         </p>
@@ -950,7 +950,7 @@ function AddPropertyModal({ onClose, onAdd, editingProperty }: { onClose: () => 
                         ))}
                       </div>
                       <p className="text-[10px] text-gray-400 mt-2">
-                        💡 First image will be used as the main property image
+                        ðŸ’¡ First image will be used as the main property image
                       </p>
                     </div>
                   )}
@@ -958,8 +958,8 @@ function AddPropertyModal({ onClose, onAdd, editingProperty }: { onClose: () => 
 
                 <div className="bg-gray-50 rounded-xl p-4 space-y-1.5">
                   <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Summary</p>
-                  {[['Title', form.title], ['Location', form.location], ['Type', form.type], ['Rent', form.rent ? fmtNPR(+form.rent) : '—'], ['Area', form.area], ['Beds/Baths', `${form.beds} / ${form.baths}`], ['Furnishing', form.furnishing], ['Images', `${form.images.length} uploaded`]].map(([l, v]) => (
-                    <div key={l} className="flex justify-between text-xs"><span className="text-gray-400">{l}</span><span className="font-medium text-gray-800 truncate max-w-[60%] text-right">{v || '—'}</span></div>
+                  {[['Title', form.title], ['Location', form.location], ['Type', form.type], ['Rent', form.rent ? fmtNPR(+form.rent) : 'â€”'], ['Area', form.area], ['Beds/Baths', `${form.beds} / ${form.baths}`], ['Furnishing', form.furnishing], ['Images', `${form.images.length} uploaded`]].map(([l, v]) => (
+                    <div key={l} className="flex justify-between text-xs"><span className="text-gray-400">{l}</span><span className="font-medium text-gray-800 truncate max-w-[60%] text-right">{v || 'â€”'}</span></div>
                   ))}
                 </div>
               </motion.div>
@@ -984,7 +984,7 @@ function AddPropertyModal({ onClose, onAdd, editingProperty }: { onClose: () => 
   )
 }
 
-// ─── Application Modal ─────────────────────────────────────────────────────────
+// â”€â”€â”€ Application Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function ApplicationModal({ app, onClose, onApprove, onReject }: any) {
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
@@ -1011,7 +1011,7 @@ function ApplicationModal({ app, onClose, onApprove, onReject }: any) {
   )
 }
 
-// ─── Messenger Component ───────────────────────────────────────────────────────
+// â”€â”€â”€ Messenger Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function MessengerPanel({ activeConvId }: { activeConvId?: string }) {
   const { user } = useAuth()
   const [convs, setConvs] = useState<Chat[]>([])
@@ -1089,16 +1089,16 @@ function MessengerPanel({ activeConvId }: { activeConvId?: string }) {
     
     // Send notification to tenant
     try {
-      console.log('?? Attempting to send notification to tenant:', active.tenantName);
+      console.log('🔔 Attempting to send notification to tenant:', active.tenantName);
       
       // Fetch tenant email from backend using tenant name
       const tenantName = active.tenantName;
       if (tenantName) {
-        const response = await fetch(`https://sumedha2408480-flat-mate-backend.onrender.com/api/users`);
+        const response = await fetch(`${BACKEND_URL}/api/users`);
         if (response.ok) {
           const data = await response.json();
           const users = data.users || data; // Handle both {users: []} and [] formats
-          console.log('?? Fetched users:', users.length);
+          console.log('👥 Fetched users:', users.length);
           
           const tenant = users.find((u: any) => {
             const fullName = `${u.firstName} ${u.lastName}`.trim();
@@ -1106,20 +1106,20 @@ function MessengerPanel({ activeConvId }: { activeConvId?: string }) {
             return fullName.toLowerCase() === tenantName.toLowerCase();
           });
           
-          console.log('?? Found tenant:', tenant ? tenant.email : 'NOT FOUND');
+          console.log('🔍 Found tenant:', tenant ? tenant.email : 'NOT FOUND');
           
           if (tenant && tenant.email) {
             const tenantEmail = tenant.email;
             
             // Check if tenant has notifications enabled
             const notifEnabled = localStorage.getItem(`fm_tenant_notify_messages_${tenantEmail}`) === 'true';
-            console.log('?? Notifications enabled for tenant:', notifEnabled);
-            console.log('?? LocalStorage key:', `fm_tenant_notify_messages_${tenantEmail}`);
+            console.log('🔔 Notifications enabled for tenant:', notifEnabled);
+            console.log('🔑 LocalStorage key:', `fm_tenant_notify_messages_${tenantEmail}`);
             
             if (notifEnabled) {
               // Get existing tenant notifications
               const tenantNotifs = JSON.parse(localStorage.getItem(`fm_tenant_notifs_${tenantEmail}`) || '[]');
-              console.log('?? Existing notifications:', tenantNotifs.length);
+              console.log('📬 Existing notifications:', tenantNotifs.length);
               
               // Create notification
               const notification = {
@@ -1135,32 +1135,32 @@ function MessengerPanel({ activeConvId }: { activeConvId?: string }) {
                 createdAt: new Date().toISOString()
               };
               
-              console.log('? Created notification:', notification);
+              console.log('✅ Created notification:', notification);
               
               // Add to beginning of array
               tenantNotifs.unshift(notification);
               
               // Save back to localStorage
               localStorage.setItem(`fm_tenant_notifs_${tenantEmail}`, JSON.stringify(tenantNotifs));
-              console.log('?? Saved notification to localStorage');
+              console.log('💾 Saved notification to localStorage');
               
               // Dispatch event to notify tenant dashboard if it's open
               window.dispatchEvent(new CustomEvent('tenantNotification', { detail: notification }));
-              console.log('?? Dispatched notification event');
+              console.log('📡 Dispatched notification event');
             } else {
-              console.log('?? Tenant has not enabled message notifications');
-              console.log('?? Please enable notifications in Tenant Dashboard > Settings > Notifications');
+              console.log('⚠️ Tenant has not enabled message notifications');
+              console.log('⚠️ Please enable notifications in Tenant Dashboard > Settings > Notifications');
             }
           } else {
-            console.log('? Tenant not found in database');
-            console.log('? Available users:', users.map((u: any) => `${u.firstName} ${u.lastName}`).join(', '));
+            console.log('❌ Tenant not found in database');
+            console.log('❌ Available users:', users.map((u: any) => `${u.firstName} ${u.lastName}`).join(', '));
           }
         } else {
-          console.error('? Failed to fetch users:', response.status);
+          console.error('❌ Failed to fetch users:', response.status);
         }
       }
     } catch (error) {
-      console.error('? Error sending notification:', error);
+      console.error('❌ Error sending notification:', error);
     }
     
     const myChats = await getChats(user.name, 'owner');
@@ -1184,7 +1184,7 @@ function MessengerPanel({ activeConvId }: { activeConvId?: string }) {
       try {
         const tenantName = active.tenantName;
         if (tenantName) {
-          const response = await fetch(`https://sumedha2408480-flat-mate-backend.onrender.com/api/users`);
+          const response = await fetch(`${BACKEND_URL}/api/users`);
           if (response.ok) {
             const users = await response.json();
             const tenant = users.find((u: any) => {
@@ -1351,7 +1351,7 @@ function MessengerPanel({ activeConvId }: { activeConvId?: string }) {
   )
 }
 
-// ─── Owner Messenger (same UI as MessagesPage, filtered by ownerName) ─────────
+// â”€â”€â”€ Owner Messenger (same UI as MessagesPage, filtered by ownerName) â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function OwnerMessengerFull({ user, activeConvId }: { user: any; activeConvId?: string }) {
   const [conversations, setConversations] = useState<Chat[]>([])
   const [selectedConv, setSelectedConv]   = useState<Chat | null>(null)
@@ -1406,17 +1406,17 @@ function OwnerMessengerFull({ user, activeConvId }: { user: any; activeConvId?: 
     
     // Send notification to tenant
     try {
-      console.log('?? Attempting to send notification to tenant:', selectedConv.tenantName);
+      console.log('🔔 Attempting to send notification to tenant:', selectedConv.tenantName);
       
       // Fetch tenant email from backend using tenant name
       const tenantName = selectedConv.tenantName;
       if (tenantName) {
         // Try to get user by name (search for users with matching name)
-        const response = await fetch(`https://sumedha2408480-flat-mate-backend.onrender.com/api/users`);
+        const response = await fetch(`${BACKEND_URL}/api/users`);
         if (response.ok) {
           const data = await response.json();
           const users = data.users || data; // Handle both {users: []} and [] formats
-          console.log('?? Fetched users:', users.length);
+          console.log('👥 Fetched users:', users.length);
           
           const tenant = users.find((u: any) => {
             const fullName = `${u.firstName} ${u.lastName}`.trim();
@@ -1424,20 +1424,20 @@ function OwnerMessengerFull({ user, activeConvId }: { user: any; activeConvId?: 
             return fullName.toLowerCase() === tenantName.toLowerCase();
           });
           
-          console.log('?? Found tenant:', tenant ? tenant.email : 'NOT FOUND');
+          console.log('🔍 Found tenant:', tenant ? tenant.email : 'NOT FOUND');
           
           if (tenant && tenant.email) {
             const tenantEmail = tenant.email;
             
             // Check if tenant has notifications enabled
             const notifEnabled = localStorage.getItem(`fm_tenant_notify_messages_${tenantEmail}`) === 'true';
-            console.log('?? Notifications enabled for tenant:', notifEnabled);
-            console.log('?? LocalStorage key:', `fm_tenant_notify_messages_${tenantEmail}`);
+            console.log('🔔 Notifications enabled for tenant:', notifEnabled);
+            console.log('🔑 LocalStorage key:', `fm_tenant_notify_messages_${tenantEmail}`);
             
             if (notifEnabled) {
               // Get existing tenant notifications
               const tenantNotifs = JSON.parse(localStorage.getItem(`fm_tenant_notifs_${tenantEmail}`) || '[]');
-              console.log('?? Existing notifications:', tenantNotifs.length);
+              console.log('📬 Existing notifications:', tenantNotifs.length);
               
               // Create notification
               const notification = {
@@ -1453,32 +1453,32 @@ function OwnerMessengerFull({ user, activeConvId }: { user: any; activeConvId?: 
                 createdAt: new Date().toISOString()
               };
               
-              console.log('? Created notification:', notification);
+              console.log('✅ Created notification:', notification);
               
               // Add to beginning of array
               tenantNotifs.unshift(notification);
               
               // Save back to localStorage
               localStorage.setItem(`fm_tenant_notifs_${tenantEmail}`, JSON.stringify(tenantNotifs));
-              console.log('?? Saved notification to localStorage');
+              console.log('💾 Saved notification to localStorage');
               
               // Dispatch event to notify tenant dashboard if it's open
               window.dispatchEvent(new CustomEvent('tenantNotification', { detail: notification }));
-              console.log('?? Dispatched notification event');
+              console.log('📡 Dispatched notification event');
             } else {
-              console.log('?? Tenant has not enabled message notifications');
-              console.log('?? Please enable notifications in Tenant Dashboard > Settings > Notifications');
+              console.log('⚠️ Tenant has not enabled message notifications');
+              console.log('⚠️ Please enable notifications in Tenant Dashboard > Settings > Notifications');
             }
           } else {
-            console.log('? Tenant not found in database');
-            console.log('? Available users:', users.map((u: any) => `${u.firstName} ${u.lastName}`).join(', '));
+            console.log('❌ Tenant not found in database');
+            console.log('❌ Available users:', users.map((u: any) => `${u.firstName} ${u.lastName}`).join(', '));
           }
         } else {
-          console.error('? Failed to fetch users:', response.status);
+          console.error('❌ Failed to fetch users:', response.status);
         }
       }
     } catch (error) {
-      console.error('? Error sending notification:', error);
+      console.error('❌ Error sending notification:', error);
     }
     
     const myChats = await getChats(user.name, 'owner');
@@ -1526,7 +1526,7 @@ function OwnerMessengerFull({ user, activeConvId }: { user: any; activeConvId?: 
         try {
           const tenantName = selectedConv.tenantName;
           if (tenantName) {
-            const response = await fetch(`https://sumedha2408480-flat-mate-backend.onrender.com/api/users`);
+            const response = await fetch(`${BACKEND_URL}/api/users`);
             if (response.ok) {
               const users = await response.json();
               const tenant = users.find((u: any) => {
@@ -1739,7 +1739,7 @@ function OwnerMessengerFull({ user, activeConvId }: { user: any; activeConvId?: 
   )
 }
 
-// ─── Owner Settings Panel ─────────────────────────────────────────────────────
+// â”€â”€â”€ Owner Settings Panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function OwnerSettingsPanel({ user }: { user: any }) {
   const { isDark, toggleTheme } = useTheme()
   const [activeSection, setActiveSection] = useState('profile')
@@ -1846,7 +1846,7 @@ function OwnerSettingsPanel({ user }: { user: any }) {
           window.dispatchEvent(new Event('storage'))
         } catch {}
         
-        toast('? Verification complete! You now have a verified badge', {
+        toast('✓ Verification complete! You now have a verified badge', {
           style: {
             background: '#2563EB',
             color: 'white',
@@ -1951,7 +1951,7 @@ function OwnerSettingsPanel({ user }: { user: any }) {
       // Get user ID from backend using email
       const getUserId = async (email: string) => {
         try {
-          const response = await fetch(`https://sumedha2408480-flat-mate-backend.onrender.com/api/users/email/${encodeURIComponent(email)}`)
+          const response = await fetch(`${BACKEND_URL}/api/users/email/${encodeURIComponent(email)}`)
           const data = await response.json()
           if (data.success && data.user) {
             return data.user.id || data.user._id
@@ -1967,7 +1967,7 @@ function OwnerSettingsPanel({ user }: { user: any }) {
       
       if (userId) {
         // Save to backend database
-        const response = await fetch(`https://sumedha2408480-flat-mate-backend.onrender.com/api/users/${userId}/profile`, {
+        const response = await fetch(`${BACKEND_URL}/api/users/${userId}/profile`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -2589,7 +2589,7 @@ export function OwnerDashboard() {
     }
   }, [user?.email])
 
-  // Fetch owner's properties from backend
+  // Fetch owner's properties from backend with pagination
   useEffect(() => {
     const fetchProperties = async () => {
       try {
@@ -2598,20 +2598,20 @@ export function OwnerDashboard() {
           return;
         }
         
-        // Fetch properties from backend by owner name
-        const props = await getProperties({ ownerName: user.name });
-        console.log('Fetched owner properties from backend:', props.length);
+        // Fetch owner's properties with pagination (page 1, limit 50)
+        const props = await getProperties({ ownerName: user.name }, 1, 50);
+        console.log('✅ Fetched owner properties from backend:', props.length);
         setProperties(props);
       } catch (error) {
-        console.error('Error fetching properties:', error);
+        console.error('❌ Error fetching properties:', error);
         setProperties([]);
       }
     };
 
     fetchProperties();
     
-    // Poll for updates every 10 seconds
-    const interval = setInterval(fetchProperties, 10000);
+    // Poll for updates every 30 seconds (reduced from 10 with pagination)
+    const interval = setInterval(fetchProperties, 30000);
     return () => clearInterval(interval);
   }, [user]);
 
@@ -2624,7 +2624,7 @@ export function OwnerDashboard() {
         }
 
         // Get user ID from email
-        const userResponse = await fetch(`https://sumedha2408480-flat-mate-backend.onrender.com/api/users/email/${user.email}`);
+        const userResponse = await fetch(`${BACKEND_URL}/api/users/email/${user.email}`);
         if (!userResponse.ok) {
           console.error('Failed to fetch user data');
           return;
@@ -2633,7 +2633,7 @@ export function OwnerDashboard() {
         const userId = userData.user.id;
 
         // Fetch notifications
-        const notifResponse = await fetch(`https://sumedha2408480-flat-mate-backend.onrender.com/api/users/${userId}/notifications`);
+        const notifResponse = await fetch(`${BACKEND_URL}/api/users/${userId}/notifications`);
         if (!notifResponse.ok) {
           console.error('Failed to fetch notifications');
           return;
@@ -2762,8 +2762,8 @@ export function OwnerDashboard() {
           firstName,
           lastName,
           email: b.customerEmail,
-          phone: b.customerPhone || '—',
-          property: b.propertyTitle || '—',
+          phone: b.customerPhone || 'â€”',
+          property: b.propertyTitle || 'â€”',
           propId: b.propertyId || '',
           rentDue: new Date().toISOString().split('T')[0],
           status: b.status === 'confirmed' ? 'active' : 'pending',
@@ -2817,13 +2817,13 @@ export function OwnerDashboard() {
       
       try {
         // Get user ID
-        const userResponse = await fetch(`https://sumedha2408480-flat-mate-backend.onrender.com/api/users/email/${user.email}`);
+        const userResponse = await fetch(`${BACKEND_URL}/api/users/email/${user.email}`);
         if (!userResponse.ok) return;
         const userData = await userResponse.json();
         const userId = userData.user.id;
         
         // Mark all as read in backend
-        await fetch(`https://sumedha2408480-flat-mate-backend.onrender.com/api/users/${userId}/notifications/mark-all-read`, {
+        await fetch(`${BACKEND_URL}/api/users/${userId}/notifications/mark-all-read`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' }
         });
@@ -3026,7 +3026,7 @@ export function OwnerDashboard() {
 
   const renderContent = () => { switch (activeTab) {
 
-  // ── OVERVIEW ─────────────────────────────────────────────────────────────────
+  // â”€â”€ OVERVIEW â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   case 'overview': return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
       {/* Welcome + refresh */}
@@ -3068,7 +3068,7 @@ export function OwnerDashboard() {
 
       {/* Charts row */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-        {/* Revenue chart — 3 cols */}
+        {/* Revenue chart â€” 3 cols */}
         <div className="lg:col-span-3 bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
           <div className="flex items-start justify-between mb-3">
             <div>
@@ -3089,7 +3089,7 @@ export function OwnerDashboard() {
           </div>
         </div>
 
-        {/* Calendar — 2 cols */}
+        {/* Calendar â€” 2 cols */}
         <div className="lg:col-span-2 bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
           <p className="text-xs font-semibold text-gray-800 mb-3">Today's Schedule</p>
           <MiniCalendar />
@@ -3111,7 +3111,7 @@ export function OwnerDashboard() {
               { msg: 'Anita Thapa paid rent for 2BHK', time: '2h ago', dot: 'bg-green-400' },
               { msg: 'New inquiry on Spacious 3BHK', time: '5h ago', dot: 'bg-blue-400' },
               { msg: 'New application from Rajan', time: '1d ago', dot: 'bg-amber-400' },
-              { msg: 'Maintenance request — water heater', time: '2d ago', dot: 'bg-red-400' },
+              { msg: 'Maintenance request â€” water heater', time: '2d ago', dot: 'bg-red-400' },
             ].map((a, i) => (
               <motion.div key={i} initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }} className="flex items-start gap-2.5">
                 <div className={`w-2 h-2 rounded-full ${a.dot} mt-1.5 flex-shrink-0`} />
@@ -3162,7 +3162,7 @@ export function OwnerDashboard() {
     </motion.div>
   )
 
-  // ── PROPERTIES ───────────────────────────────────────────────────────────────
+  // â”€â”€ PROPERTIES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   case 'properties': return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
       {/* Status tabs */}
@@ -3189,14 +3189,14 @@ export function OwnerDashboard() {
           <motion.div key={p.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
             <div className="relative h-40 overflow-hidden">
               <img src={p.image} alt={p.title} className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
-              {p.isPremium && <span className="absolute top-2 left-2 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-md">? PREMIUM</span>}
+              {p.isPremium && <span className="absolute top-2 left-2 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-md">⭐ PREMIUM</span>}
               <div className="absolute top-2.5 right-2.5"><span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${p.status === 'pending' ? 'bg-amber-400 text-white' : p.status === 'approved' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>{p.status === 'pending' ? 'Pending' : p.status === 'approved' ? 'Approved' : 'Rejected'}</span></div>
             </div>
             <div className="p-4">
               <h4 className="font-bold text-gray-900 text-xs mb-0.5 truncate">{p.title}</h4>
               <div className="flex items-center gap-1 text-[10px] text-gray-400 mb-2"><MapPinIcon className="w-3 h-3" />{p.location}</div>
               <p className="text-button-primary font-bold text-sm mb-2">{fmtNPR(p.rent)}<span className="text-[10px] font-normal text-gray-400">/mo</span></p>
-              <div className="flex items-center gap-2 text-[10px] text-gray-400 mb-3"><span>{p.beds}bd</span><span>�</span><span>{p.baths}ba</span><span>�</span><span>{p.area}</span></div>
+              <div className="flex items-center gap-2 text-[10px] text-gray-400 mb-3"><span>{p.beds}bd</span><span>·</span><span>{p.baths}ba</span><span>·</span><span>{p.area}</span></div>
               <div className="grid grid-cols-3 gap-1.5 mb-3">
                 {[{ l: 'Views', v: p.views, c: 'bg-blue-50 text-blue-600' }, { l: 'Saved', v: p.saves, c: 'bg-pink-50 text-pink-600' }, { l: 'Inquiries', v: p.inquiries, c: 'bg-violet-50 text-violet-600' }].map(s => (
                   <div key={s.l} className={`${s.c} rounded-lg py-1.5 text-center`}><p className="text-xs font-bold">{s.v}</p><p className="text-[9px] font-medium">{s.l}</p></div>
@@ -3244,7 +3244,7 @@ export function OwnerDashboard() {
     </motion.div>
   )
 
-  // ── TENANTS ──────────────────────────────────────────────────────────────────
+  // â”€â”€ TENANTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   case 'tenants': return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
       {/* Pending applications */}
@@ -3301,7 +3301,7 @@ export function OwnerDashboard() {
               );
               const paymentTypeDisplay = booking?.paymentType === 'advance' ? 'Half (30%)' : 
                                         booking?.paymentType === 'full' ? 'Full' : 
-                                        booking?.paymentType === 'cash' ? 'Cash' : '—';
+                                        booking?.paymentType === 'cash' ? 'Cash' : 'â€”';
               const paymentTypeColor = booking?.paymentType === 'advance' ? 'bg-blue-100 text-blue-700' : 
                                       booking?.paymentType === 'full' ? 'bg-green-100 text-green-700' : 
                                       booking?.paymentType === 'cash' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500';
@@ -3325,7 +3325,7 @@ export function OwnerDashboard() {
                     {t.blocked && t.blockReason ? (
                       <span className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded">{t.blockReason}</span>
                     ) : (
-                      <span className="text-xs text-gray-400">—</span>
+                      <span className="text-xs text-gray-400">â€”</span>
                     )}
                   </td>
                   <td className="p-3">
@@ -3360,7 +3360,7 @@ export function OwnerDashboard() {
     </motion.div>
   )
 
-  // ── BOOKINGS ─────────────────────────────────────────────────────────────────
+  // â”€â”€ BOOKINGS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   case 'bookings': return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
       {/* KPI */}
@@ -3396,7 +3396,7 @@ export function OwnerDashboard() {
             <tbody>
               {myBookings.map((b: any, i: number) => (
                 <motion.tr key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }} className="border-b border-gray-50 hover:bg-gray-50/60 transition-colors">
-                  <td className="p-3 font-mono text-button-primary text-[10px]">{b.receiptId || '—'}</td>
+                  <td className="p-3 font-mono text-button-primary text-[10px]">{b.receiptId || 'â€”'}</td>
                   <td className="p-3 text-gray-600 max-w-[130px] truncate">{b.propertyTitle}</td>
                   <td className="p-3 text-gray-600">{b.customerName}</td>
                   <td className="p-3 font-semibold text-gray-800">{b.amount > 0 ? fmtNPR(b.amount) : 'Cash'}</td>
@@ -3420,7 +3420,7 @@ export function OwnerDashboard() {
     </motion.div>
   )
 
-  // ── ANALYTICS ────────────────────────────────────────────────────────────────
+  // â”€â”€ ANALYTICS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   case 'analytics': return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
       {/* KPI row */}
@@ -3501,14 +3501,14 @@ export function OwnerDashboard() {
     </motion.div>
   )
 
-  // ── MESSAGES ─────────────────────────────────────────────────────────────────
+  // â”€â”€ MESSAGES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   case 'messages': return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="h-full">
       <OwnerMessengerFull user={user} activeConvId={activeChatId} />
     </motion.div>
   )
 
-  // ── NOTIFICATIONS ─────────────────────────────────────────────────────────────
+  // â”€â”€ NOTIFICATIONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   case 'notifications': return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
       <div className="flex items-center justify-between mb-4">
@@ -3519,12 +3519,12 @@ export function OwnerDashboard() {
               if (!user?.email) return;
               
               // Get user ID
-              const userResponse = await fetch(`https://sumedha2408480-flat-mate-backend.onrender.com/api/users/email/${user.email}`);
+              const userResponse = await fetch(`${BACKEND_URL}/api/users/email/${user.email}`);
               const userData = await userResponse.json();
               const userId = userData.user.id;
               
               // Mark all as read in backend
-              await fetch(`https://sumedha2408480-flat-mate-backend.onrender.com/api/users/${userId}/notifications/mark-all-read`, {
+              await fetch(`${BACKEND_URL}/api/users/${userId}/notifications/mark-all-read`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' }
               });
@@ -3549,12 +3549,12 @@ export function OwnerDashboard() {
               if (!user?.email) return;
               
               // Get user ID
-              const userResponse = await fetch(`https://sumedha2408480-flat-mate-backend.onrender.com/api/users/email/${user.email}`);
+              const userResponse = await fetch(`${BACKEND_URL}/api/users/email/${user.email}`);
               const userData = await userResponse.json();
               const userId = userData.user.id;
               
               // Clear all notifications in backend
-              await fetch(`https://sumedha2408480-flat-mate-backend.onrender.com/api/users/${userId}/notifications`, {
+              await fetch(`${BACKEND_URL}/api/users/${userId}/notifications`, {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' }
               });
@@ -3633,7 +3633,7 @@ export function OwnerDashboard() {
   )
 
 
-  // -- HISTORY ------------------------------------------------------------------
+  // ── HISTORY ──────────────────────────────────────────────────────────────────
   case 'settings': return <OwnerSettingsPanel user={user} />
 
   default: return null
