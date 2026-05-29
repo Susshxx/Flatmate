@@ -14,7 +14,6 @@ import {
 import { PropertyCard } from '../components/PropertyCard'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
-import { initializeStorageCleanup } from '../utils/cleanupStorage'
 
 import { BACKEND_URL } from '../config/api'
 
@@ -206,11 +205,6 @@ function CustomSelect({
 export function PropertiesPage() {
   const navigate       = useNavigate()
   const [searchParams] = useSearchParams()
-  
-  // Initialize storage cleanup on component mount
-  useEffect(() => {
-    initializeStorageCleanup()
-  }, [])
 
   const [location,       setLocation]       = useState(searchParams.get('location') || 'All Locations')
   const [propType,       setPropType]       = useState(searchParams.get('type')     || 'All Types')

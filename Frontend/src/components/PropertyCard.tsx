@@ -20,18 +20,17 @@ export interface PropertyCardProps {
   bathrooms: number
   ownerName?: string
   ownerEmail?: string
-  ownerIsVerified?: boolean
   views?: number
   isPremium?: boolean
 }
 
 export function PropertyCard({
   id, image, title, location, rent,
-  bedrooms, bathrooms, ownerName, ownerEmail, ownerIsVerified, views = 0, isPremium = false
+  bedrooms, bathrooms, ownerName, ownerEmail, views = 0, isPremium = false
 }: PropertyCardProps) {
   const { isFavorite, toggleFavorite } = useFavorites()
   const saved = isFavorite(id)
-  const [isOwnerVerified, setIsOwnerVerified] = useState(ownerIsVerified || false)
+  const [isOwnerVerified, setIsOwnerVerified] = useState(false)
   const [bookingStatus, setBookingStatus] = useState<'available' | 'pending' | 'confirmed'>('available')
 
   // List of dummy/sample owner names - these properties should never show as booked
@@ -156,58 +155,27 @@ export function PropertyCard({
 
   // Check if owner is verified
   useEffect(() => {
-    const checkOwnerVerification = async () => {
-      // If verification status is already provided as prop, use it
-      if (ownerIsVerified !== undefined) {
-        setIsOwnerVerified(ownerIsVerified)
-        return
-      }
-      
-      if (!ownerEmail) {
-        setIsOwnerVerified(false)
-        return
-      }
-      
-      // First check localStorage for quick response
+    if (ownerEmail) {
       try {
         const savedProfile = localStorage.getItem(`fm_owner_profile_${ownerEmail}`)
         if (savedProfile) {
           const parsed = JSON.parse(savedProfile)
-          if (parsed.isVerified) {
-            setIsOwnerVerified(true)
-            return
-          }
+          setIsOwnerVerified(parsed.isVerified || false)
         }
       } catch {}
-      
-      // Check flatmate_user for current logged-in user
-      try {
-        const userStr = localStorage.getItem('flatmate_user')
-        if (userStr) {
-          const user = JSON.parse(userStr)
-          if (user.email === ownerEmail && user.isVerified) {
-            setIsOwnerVerified(true)
-            return
-          }
-        }
-      } catch {}
-      
-      // Fetch from backend API for accurate verification status
-      try {
-        const response = await fetch(`${BACKEND_URL}/api/users/email/${ownerEmail}`)
-        if (response.ok) {
-          const data = await response.json()
-          if (data.success && data.user) {
-            setIsOwnerVerified(data.user.isVerified || false)
-          }
-        }
-      } catch (error) {
-        console.error('Failed to fetch owner verification status:', error)
-      }
     }
     
-    checkOwnerVerification()
-  }, [ownerEmail, ownerIsVerified])
+    // Also check flatmate_user for verification status
+    try {
+      const userStr = localStorage.getItem('flatmate_user')
+      if (userStr) {
+        const user = JSON.parse(userStr)
+        if (user.email === ownerEmail && user.isVerified) {
+          setIsOwnerVerified(true)
+        }
+      }
+    } catch {}
+  }, [ownerEmail])
 
   const handleToggle = (e: React.MouseEvent) => {
     e.preventDefault()

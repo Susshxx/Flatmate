@@ -807,14 +807,8 @@ export function PropertyDetailPage() {
             setLoading(false)
             return
           }
-        } else if (res.status === 404) {
-          // Property not found in database - this is expected for deleted properties
-          console.warn('Property not found in database:', id)
         }
-      } catch (error) {
-        // Network error or timeout - fall through to local data
-        console.warn('Backend unavailable, falling back to local data:', error)
-      }
+      } catch { /* backend unavailable — fall through to local data */ }
 
       // 2. Fallback to ALL_PROPERTIES (generated + premium)
       console.log('PropertyDetailPage: Falling back to local properties')
@@ -828,8 +822,8 @@ export function PropertyDetailPage() {
         setRecommended(recs)
         setLoading(false)
       } else {
-        console.warn('Property not found with id:', id)
-        toast.error('Property not found. Redirecting to properties page...')
+        console.error('Property not found with id:', id)
+        toast.error('Property not found')
         setLoading(false)
         navigate('/properties')
       }
