@@ -69,9 +69,7 @@ import { useTheme } from '../contexts/ThemeContext'
 import { toast } from '../utils/toast'
 import { AdminHistorySection } from '../components/AdminHistorySection'
 import { AddPropertyModalAdmin } from '../components/AddPropertyModalAdmin'
-
 import { BACKEND_URL } from '../config/api'
-
 // ─── localStorage helpers ─────────────────────────────────────────────────────
 const ls  = (k: string, fb = '[]') => { try { return JSON.parse(localStorage.getItem(k) || fb) } catch { return JSON.parse(fb) } }
 const setLS = (k: string, v: any)  => { try { localStorage.setItem(k, JSON.stringify(v)) } catch {} }
@@ -683,22 +681,20 @@ function AdminPropertiesPanel({ users, blockedOwners, onBlockUser }: { users: an
     setGalleryOpen(true);
   };
 
-  // Fetch all properties from backend with pagination
+  // Fetch all properties from backend
   useEffect(() => {
     const fetchProperties = async () => {
       try {
-        // Fetch all properties with pagination (100 per page for admin)
-        const response = await fetch(`${BACKEND_URL}/api/properties/all?page=1&limit=100`);
+        const response = await fetch(`${BACKEND_URL}/api/properties/all`);
         if (response.ok) {
           const data = await response.json();
           setProperties(data.properties || []);
-          console.log('✅ Loaded', data.properties?.length || 0, 'properties for admin review');
         } else {
-          console.error('❌ Failed to fetch properties from backend');
+          console.error('Failed to fetch properties from backend');
           setProperties([]);
         }
       } catch (error) {
-        console.error('❌ Error fetching properties:', error);
+        console.error('Error fetching properties:', error);
         setProperties([]);
       } finally {
         setLoading(false);
@@ -706,8 +702,8 @@ function AdminPropertiesPanel({ users, blockedOwners, onBlockUser }: { users: an
     };
 
     fetchProperties();
-    // Poll every 15 seconds for updates (reduced from 5 seconds with pagination)
-    const interval = setInterval(fetchProperties, 15000);
+    // Poll every 5 seconds for updates
+    const interval = setInterval(fetchProperties, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -1530,7 +1526,7 @@ export function AdminDashboard() {
       console.log('👤 Fetching contact messages...')
       setLoadingMessages(true)
       try {
-        console.log(`📡 Fetching from: ${BACKEND_URL}/api/contact/messages`)
+        console.log('📡 Fetching from:', `${BACKEND_URL}/api/contact/messages`)
         const response = await fetch(`${BACKEND_URL}/api/contact/messages`, {
           method: 'GET',
           headers: {
@@ -1559,16 +1555,14 @@ export function AdminDashboard() {
     }
   }, [user])
 
-  // Fetch properties for overview stats with pagination
+  // Fetch properties for overview stats
   useEffect(() => {
     const fetchProperties = async () => {
       try {
-        // Fetch with pagination for overview stats (100 per page)
-        const response = await fetch(`${BACKEND_URL}/api/properties/all?page=1&limit=100`)
+        const response = await fetch(`${BACKEND_URL}/api/properties/all`)
         if (response.ok) {
           const data = await response.json()
           setProperties(data.properties || [])
-          console.log('✅ Fetched properties for admin stats');
         }
       } catch (error) {
         console.error('❌ Properties fetch error:', error)
