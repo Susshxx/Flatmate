@@ -20,21 +20,43 @@ export interface PropertyCardProps {
   bathrooms: number
   ownerName?: string
   ownerEmail?: string
+  ownerIsVerified?: boolean
   views?: number
   isPremium?: boolean
 }
 
 export function PropertyCard({
   id, image, title, location, rent,
-  bedrooms, bathrooms, ownerName, ownerEmail, views = 0, isPremium = false
+  bedrooms, bathrooms, ownerName, ownerEmail, ownerIsVerified, views = 0, isPremium = false
 }: PropertyCardProps) {
   const { isFavorite, toggleFavorite } = useFavorites()
   const saved = isFavorite(id)
-  const [isOwnerVerified, setIsOwnerVerified] = useState(false)
+  const [isOwnerVerified, setIsOwnerVerified] = useState(ownerIsVerified || false)
   const [bookingStatus, setBookingStatus] = useState<'available' | 'pending' | 'confirmed'>('available')
+
+  // List of dummy/sample owner names - these properties should never show as booked
+  const DUMMY_OWNERS = [
+    'Ram Thapa',
+    'Sita Sharma', 
+    'Hari Krishna',
+    'Gita Rai',
+    'Bikash Shrestha',
+    'Anita Gurung',
+    'Suresh Maharjan',
+    'Rajesh Maharjan'
+  ]
+  
+  // Check if this is a dummy property
+  const isDummyProperty = ownerName && DUMMY_OWNERS.includes(ownerName)
 
   // Check if property is booked from backend API
   useEffect(() => {
+    // Skip booking check for dummy properties - they should always show as available
+    if (isDummyProperty) {
+      setBookingStatus('available')
+      return
+    }
+    
     let isMounted = true
     
     const checkBookingStatus = async () => {
@@ -75,10 +97,15 @@ export function PropertyCard({
     return () => {
       isMounted = false
     }
-  }, [id])
+  }, [id, isDummyProperty])
 
   // Listen for booking changes - only for this specific property
   useEffect(() => {
+    // Skip booking updates for dummy properties
+    if (isDummyProperty) {
+      return
+    }
+    
     let isMounted = true
     
     const handleBookingChange = async (event?: Event) => {
@@ -125,31 +152,62 @@ export function PropertyCard({
       window.removeEventListener('bookingAdded', handleBookingChange)
       window.removeEventListener('bookingUpdated', handleBookingChange)
     }
-  }, [id])
+  }, [id, isDummyProperty])
 
   // Check if owner is verified
   useEffect(() => {
-    if (ownerEmail) {
+    const checkOwnerVerification = async () => {
+      // If verification status is already provided as prop, use it
+      if (ownerIsVerified !== undefined) {
+        setIsOwnerVerified(ownerIsVerified)
+        return
+      }
+      
+      if (!ownerEmail) {
+        setIsOwnerVerified(false)
+        return
+      }
+      
+      // First check localStorage for quick response
       try {
         const savedProfile = localStorage.getItem(`fm_owner_profile_${ownerEmail}`)
         if (savedProfile) {
           const parsed = JSON.parse(savedProfile)
-          setIsOwnerVerified(parsed.isVerified || false)
+          if (parsed.isVerified) {
+            setIsOwnerVerified(true)
+            return
+          }
         }
       } catch {}
+      
+      // Check flatmate_user for current logged-in user
+      try {
+        const userStr = localStorage.getItem('flatmate_user')
+        if (userStr) {
+          const user = JSON.parse(userStr)
+          if (user.email === ownerEmail && user.isVerified) {
+            setIsOwnerVerified(true)
+            return
+          }
+        }
+      } catch {}
+      
+      // Fetch from backend API for accurate verification status
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/users/email/${ownerEmail}`)
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success && data.user) {
+            setIsOwnerVerified(data.user.isVerified || false)
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch owner verification status:', error)
+      }
     }
     
-    // Also check flatmate_user for verification status
-    try {
-      const userStr = localStorage.getItem('flatmate_user')
-      if (userStr) {
-        const user = JSON.parse(userStr)
-        if (user.email === ownerEmail && user.isVerified) {
-          setIsOwnerVerified(true)
-        }
-      }
-    } catch {}
-  }, [ownerEmail])
+    checkOwnerVerification()
+  }, [ownerEmail, ownerIsVerified])
 
   const handleToggle = (e: React.MouseEvent) => {
     e.preventDefault()
