@@ -3531,9 +3531,30 @@ export function OwnerDashboard() {
                   <td className="p-3 text-gray-400">{b.moveInDate}</td>
                   <td className="p-3">
                     <div className="flex gap-2">
-                       <button onClick={() => handleChat(b)} className="px-3 py-1 bg-blue-50 text-button-primary text-[11px] font-bold rounded-full hover:bg-blue-100 transition-colors">Chat</button>
-                       {b.status !== 'confirmed' && (
-                         <button onClick={() => handleConfirmBooking(b)} className="px-3 py-1 bg-green-50 text-green-700 text-[11px] font-bold rounded-full hover:bg-green-100 transition-colors">Confirm</button>
+                       {b.status === 'pending' ? (
+                         <>
+                           <button 
+                             onClick={() => handleConfirmBooking(b)} 
+                             className="px-3 py-1 bg-green-50 text-green-700 text-[11px] font-bold rounded-full hover:bg-green-100 transition-colors"
+                           >
+                             Confirm
+                           </button>
+                           <button 
+                             onClick={() => {
+                               const reason = prompt('Reason for rejection (optional):')
+                               if (reason !== null) {
+                                 handleRejectBooking(b, reason || 'Not specified')
+                               }
+                             }}
+                             className="px-3 py-1 bg-red-50 text-red-700 text-[11px] font-bold rounded-full hover:bg-red-100 transition-colors"
+                           >
+                             Reject
+                           </button>
+                         </>
+                       ) : b.status === 'confirmed' ? (
+                         <span className="px-3 py-1 bg-green-50 text-green-700 text-[11px] font-bold rounded-full">Confirmed</span>
+                       ) : (
+                         <span className="px-3 py-1 bg-gray-50 text-gray-500 text-[11px] font-bold rounded-full">{b.status}</span>
                        )}
                     </div>
                   </td>
