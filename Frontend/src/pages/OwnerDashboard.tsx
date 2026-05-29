@@ -2596,27 +2596,56 @@ export function OwnerDashboard() {
     const fetchProperties = async () => {
       try {
         if (!user || !user.email) {
+          console.log('⚠️ No user or email, skipping property fetch');
           setProperties([]);
           return;
         }
+        
+        console.log('📡 Fetching properties for user:', user.email);
         
         // Get user ID from email first
-        const userResponse = await fetch(`${BACKEND_URL}/api/users/email/${user.email}`);
+        const userResponse = await fetch(`${BACKEND_URL}/api/users/email/${encodeURIComponent(user.email)}`);
         if (!userResponse.ok) {
-          console.error('Failed to fetch user data for properties');
+          console.error('❌ Failed to fetch user data:', userResponse.status, userResponse.statusText);
+          // Try fetching by name as fallback
+          console.log('🔄 Trying fallback: fetching by owner name');
+          const props = await getProperties({ ownerName: user.name });
+          console.log('✅ Fetched properties by name:', props.length);
+          setProperties(props);
+          return;
+        }
+        
+        const userData = await userResponse.json();
+        console.log('✅ User data fetched:', userData);
+        const userId = userData.user.id || userData.user._id;
+        
+        if (!userId) {
+          console.error('❌ No user ID found in response');
           setProperties([]);
           return;
         }
-        const userData = await userResponse.json();
-        const userId = userData.user.id || userData.user._id;
         
         // Fetch properties from backend by owner ID (more reliable than name)
+        console.log('📡 Fetching properties for user ID:', userId);
         const props = await getProperties({ ownerId: userId });
-        console.log('Fetched owner properties from backend:', props.length, 'for user ID:', userId);
+        console.log('✅ Fetched owner properties from backend:', props.length);
         setProperties(props);
       } catch (error) {
-        console.error('Error fetching properties:', error);
-        setProperties([]);
+        console.error('❌ Error fetching properties:', error);
+        // Try fallback with owner name
+        try {
+          if (user && user.name) {
+            console.log('🔄 Error occurred, trying fallback with owner name');
+            const props = await getProperties({ ownerName: user.name });
+            console.log('✅ Fallback successful, fetched:', props.length, 'properties');
+            setProperties(props);
+          } else {
+            setProperties([]);
+          }
+        } catch (fallbackError) {
+          console.error('❌ Fallback also failed:', fallbackError);
+          setProperties([]);
+        }
       }
     };
 

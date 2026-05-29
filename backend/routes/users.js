@@ -173,12 +173,17 @@ router.get('/:id', async (req, res) => {
 router.get('/email/:email', async (req, res) => {
   try {
     const email = req.params.email.toLowerCase().trim();
+    console.log('📧 Fetching user by email:', email);
+    
     const user = await User.findOne({ email })
       .select('-password -otp -otpExpiry -loginOtp -loginOtpExpiry -googleId');
 
     if (!user) {
+      console.log('❌ User not found for email:', email);
       return res.status(404).json({ success: false, message: 'User not found' });
     }
+
+    console.log('✅ User found:', user.email, 'ID:', user._id);
 
     res.json({
       success: true,
@@ -198,6 +203,10 @@ router.get('/email/:email', async (req, res) => {
       }
     });
   } catch (error) {
+    console.error('❌ Error fetching user by email:', error);
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+});
     console.error('Error fetching user by email:', error);
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
