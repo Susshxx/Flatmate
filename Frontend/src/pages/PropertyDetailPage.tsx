@@ -741,18 +741,22 @@ export function PropertyDetailPage() {
 
   // ── Load property ──────────────────────────────────────────────────────────
   useEffect(() => {
+    console.log('PropertyDetailPage: Loading property with id:', id)
     if (!id) { navigate('/properties'); return }
 
     const load = async () => {
       setLoading(true)
+      console.log('PropertyDetailPage: Starting property load...')
 
       // 1. Try backend first
       try {
         const res = await fetch(`${BACKEND_URL}/api/properties/${id}`, {
           signal: AbortSignal.timeout(4000),
         })
+        console.log('PropertyDetailPage: Backend response status:', res.status)
         if (res.ok) {
           const data = await res.json()
+          console.log('PropertyDetailPage: Backend data received:', data)
           const p = data.property || data
           if (p && (p._id || p.id)) {
             const normalized = {
@@ -778,6 +782,7 @@ export function PropertyDetailPage() {
               ownerPhone:   p.ownerPhone || '',
               ownerId:      p.ownerId || '',
             }
+            console.log('PropertyDetailPage: Normalized property:', normalized)
             setProperty(normalized)
             console.log('Property loaded successfully:', normalized.id, normalized.title)
 
@@ -806,7 +811,9 @@ export function PropertyDetailPage() {
       } catch { /* backend unavailable — fall through to local data */ }
 
       // 2. Fallback to ALL_PROPERTIES (generated + premium)
+      console.log('PropertyDetailPage: Falling back to local properties')
       const found = ALL_PROPERTIES.find(p => p.id === id)
+      console.log('PropertyDetailPage: Found in local properties:', found ? found.id : 'NOT FOUND')
       if (found) {
         setProperty(found)
         const recs = ALL_PROPERTIES
@@ -1072,7 +1079,7 @@ export function PropertyDetailPage() {
   }
 
   // Defensive check - ensure property has required fields
-  if (!property.title || !property.location) {
+  if (!property.title || !property.location || !property.images || !Array.isArray(property.images) || property.images.length === 0) {
     console.error('Property missing required fields:', property)
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -1088,12 +1095,10 @@ export function PropertyDetailPage() {
     )
   }
 
-  // Wrap render in error boundary
-  try {
-    // ── Render ─────────────────────────────────────────────────────────────────
-    return (
-      <main className="min-h-screen bg-background-light text-primary pb-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28">
+  // ── Render ─────────────────────────────────────────────────────────────────
+  return (
+    <main className="min-h-screen bg-background-light text-primary pb-20">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28">
 
         {/* Breadcrumb + save */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
@@ -1846,20 +1851,4 @@ export function PropertyDetailPage() {
       </AnimatePresence>
     </main>
   )
-  } catch (error) {
-    console.error('Render error:', error)
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <AlertCircleIcon className="w-16 h-16 text-red-400 mx-auto mb-4" />
-          <p className="text-gray-600 mb-2">Error loading property details</p>
-          <p className="text-sm text-gray-500 mb-4">Please try refreshing the page</p>
-          <button
-            onClick={() => navigate('/properties')}
-            className="px-6 py-2.5 bg-button-primary text-white font-semibold rounded-xl"
-          >Back to Properties</button>
-        </div>
-      </div>
-    )
-  }
 }

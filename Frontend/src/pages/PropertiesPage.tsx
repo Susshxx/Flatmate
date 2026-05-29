@@ -7,7 +7,9 @@ import {
   ChevronRightIcon, XIcon, SendIcon, StarIcon, CheckCircleIcon,
   CalendarIcon, CreditCardIcon, DownloadIcon, AlertCircleIcon,
   BuildingIcon, MapIcon, HeartIcon, ShieldCheckIcon,
-  ClockIcon,
+  ClockIcon, SparklesIcon, DoorOpenIcon, Building2Icon, UsersIcon,
+  ChevronDownIcon, CheckIcon, SearchIcon, SlidersHorizontalIcon,
+  InfoIcon, NavigationIcon, LightbulbIcon, FilterIcon, GridIcon, ListIcon,
 } from 'lucide-react'
 import { PropertyCard } from '../components/PropertyCard'
 import { Button } from '../components/ui/Button'
