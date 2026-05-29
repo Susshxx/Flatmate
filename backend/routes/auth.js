@@ -192,7 +192,8 @@ router.post('/login', async (req, res) => {
         email: user.email,
         role: user.role,
         profilePicture: user.profilePicture || null,
-        phone: user.phone || null
+        phone: user.phone || null,
+        isVerified: user.isVerified || false
       },
     });
   } catch (error) {
@@ -236,16 +237,14 @@ router.post('/verify-login-otp', async (req, res) => {
         email: user.email,
         role: user.role,
         profilePicture: user.profilePicture || null,
-        phone: user.phone || null
+        phone: user.phone || null,
+        isVerified: user.isVerified || false
       },
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error.' });
   }
 });
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// RESEND LOGIN OTP
 // ═══════════════════════════════════════════════════════════════════════════════
 router.post('/resend-login-otp', async (req, res) => {
   try {
@@ -424,7 +423,8 @@ router.post('/google-login', async (req, res) => {
         email: user.email,
         role: user.role,
         profilePicture: user.profilePicture || null,
-        phone: user.phone || null
+        phone: user.phone || null,
+        isVerified: user.isVerified || false
       },
     });
   } catch (error) {
@@ -468,7 +468,8 @@ router.post('/verify-google-login-otp', async (req, res) => {
         email: user.email,
         role: user.role,
         profilePicture: user.profilePicture || null,
-        phone: user.phone || null
+        phone: user.phone || null,
+        isVerified: user.isVerified || false
       },
     });
   } catch (error) {

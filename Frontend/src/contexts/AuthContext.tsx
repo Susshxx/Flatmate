@@ -11,12 +11,13 @@ interface User {
   avatar?: string;
   phone?: string;
   profilePicture?: string;
+  isVerified?: boolean;
 }
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
-  login: (name: string, role: UserRole, email?: string, id?: string) => void;
+  login: (name: string, role: UserRole, email?: string, id?: string, isVerified?: boolean) => void;
   signup: (name: string, email: string, role: UserRole) => void;
   logout: () => void;
   updateUser: (updates: Partial<User>) => void;
@@ -44,8 +45,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const login = (name: string, role: UserRole, email = '', id?: string) => {
-    const u: User = { id, name, email, role };
+  const login = (name: string, role: UserRole, email = '', id?: string, isVerified?: boolean) => {
+    const u: User = { id, name, email, role, isVerified };
     setUser(u);
     localStorage.setItem('flatmate_user', JSON.stringify(u));
   };

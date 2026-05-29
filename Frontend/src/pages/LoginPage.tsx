@@ -204,7 +204,7 @@ export function LoginPage() {
         });
         setStep('success');
         setTimeout(() => {
-          login(data.user.name, data.user.role, data.user.email, data.user.id);
+          login(data.user.name, data.user.role, data.user.email, data.user.id, data.user.isVerified);
           if (data.user.role === 'admin') navigate('/dashboard/admin');
           else if (data.user.role === 'landlord' || data.user.role === 'owner') navigate('/dashboard/owner');
           else navigate('/');
@@ -281,11 +281,13 @@ export function LoginPage() {
             color: 'white',
           },
         });
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('flatmate_token', data.token);
         setTimeout(() => {
-          login(userData.name, userData.role);
+          login(data.user.name, data.user.role, data.user.email, data.user.id, data.user.isVerified);
           // Route based on role
-          if (userData.role === 'admin') navigate('/dashboard/admin');
-          else if (userData.role === 'landlord' || userData.role === 'owner') navigate('/dashboard/owner');
+          if (data.user.role === 'admin') navigate('/dashboard/admin');
+          else if (data.user.role === 'landlord' || data.user.role === 'owner') navigate('/dashboard/owner');
           else navigate('/');
         }, 1500);
       } else {

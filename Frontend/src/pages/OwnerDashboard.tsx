@@ -2138,7 +2138,7 @@ function OwnerSettingsPanel({ user }: { user: any }) {
                 <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
               </div>
               <div>
-                <p className="text-sm font-bold text-gray-900">{user?.name || 'Owner'}</p>
+                <p className="text-sm font-bold text-gray-900 flex items-center gap-1.5">{user?.name || 'Owner'}{user?.isVerified && <ShieldCheckIcon className="w-4 h-4 text-blue-600 fill-blue-600" title="Verified Owner" />}</p>
                 <p className="text-xs text-gray-500 capitalize">Property Owner</p>
                 <p className="text-[10px] text-gray-400 mt-0.5">{user?.email}</p>
                 <button onClick={() => fileInputRef.current?.click()} className="text-[10px] text-button-primary font-semibold mt-1 hover:underline">
@@ -3810,7 +3810,7 @@ export function OwnerDashboard() {
           </div>
           {!sidebarCollapsed && <div className="flex items-center gap-2.5 mb-4 p-2.5 bg-gradient-to-r from-button-primary/5 to-blue-50 dark:from-button-primary/10 dark:to-blue-900/20 rounded-xl border border-button-primary/10 dark:border-button-primary/20">
             <div className="w-8 h-8 bg-button-primary rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0">{(user?.name || 'O').charAt(0)}</div>
-            <div className="min-w-0"><p className="font-semibold text-gray-900 dark:text-white text-xs truncate">{user?.name || 'Owner'}</p><p className="text-[10px] text-gray-400 dark:text-gray-500">Property Owner</p></div>
+            <div className="min-w-0"><p className="font-semibold text-gray-900 dark:text-white text-xs truncate flex items-center gap-1">{user?.name || 'Owner'}{user?.isVerified && <ShieldCheckIcon className="w-3.5 h-3.5 text-blue-600 fill-blue-600 flex-shrink-0" title="Verified Owner" />}</p><p className="text-[10px] text-gray-400 dark:text-gray-500">Property Owner</p></div>
           </div>}
           <nav className="space-y-0.5 flex-1">
             {TABS.map(tab => {

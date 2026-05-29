@@ -157,6 +157,7 @@ router.get('/:id', async (req, res) => {
         phone: user.phone || 'N/A',
         role: user.role,
         status: user.isVerified ? 'active' : 'pending',
+        isVerified: user.isVerified || false,
         joined: user.createdAt.toISOString().split('T')[0],
         lastAccess: user.updatedAt.toISOString().split('T')[0],
         isGoogleUser: user.isGoogleUser || false
