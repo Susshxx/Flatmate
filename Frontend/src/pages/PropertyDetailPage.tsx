@@ -6,11 +6,11 @@ import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import {
   MapPinIcon, BedDoubleIcon, BathIcon, UtensilsIcon, HomeIcon,
-  PhoneIcon, MailIcon, EyeIcon, MessageCircleIcon, ChevronLeftIcon,
+  PhoneIcon, MailIcon, MessageCircleIcon, ChevronLeftIcon,
   ChevronRightIcon, XIcon, SendIcon, StarIcon, CheckCircleIcon,
   CalendarIcon, CreditCardIcon, DownloadIcon, AlertCircleIcon,
-  BuildingIcon, MapIcon, HeartIcon, ShieldCheckIcon, ArrowLeftIcon,
-  SparklesIcon, ClockIcon,
+  BuildingIcon, MapIcon, HeartIcon, ShieldCheckIcon,
+  ClockIcon,
 } from 'lucide-react'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
@@ -653,34 +653,40 @@ export function PropertyDetailPage() {
 
   // Fetch booking status from backend API instead of localStorage
   useEffect(() => {
-    if (!property) return
+    if (!property || !property.id) return
     
     const checkBookingStatus = async () => {
       setBookingLoading(true)
       try {
-        const response = await fetch(`${BACKEND_URL}/api/bookings?propertyId=${property.id}&status=confirmed`)
+        // Check for both confirmed and pending bookings in a single call
+        const response = await fetch(`${BACKEND_URL}/api/bookings?propertyId=${property.id}`)
         if (response.ok) {
           const data = await response.json()
-          if (data.success && data.bookings && data.bookings.length > 0) {
-            setIsBooked(true)
-            setExistingBooking(data.bookings[0])
-          } else {
-            // Also check for pending bookings
-            const pendingResponse = await fetch(`${BACKEND_URL}/api/bookings?propertyId=${property.id}&status=pending`)
-            if (pendingResponse.ok) {
-              const pendingData = await pendingResponse.json()
-              if (pendingData.success && pendingData.bookings && pendingData.bookings.length > 0) {
-                setIsBooked(true) // Property is locked if there's a pending booking
-                setExistingBooking(pendingData.bookings[0])
-              } else {
-                setIsBooked(false)
-                setExistingBooking(null)
-              }
+          if (data.success && data.bookings && Array.isArray(data.bookings)) {
+            // Find any active booking (pending or confirmed)
+            const activeBooking = data.bookings.find((b: any) => 
+              b.status === 'confirmed' || b.status === 'pending'
+            )
+            
+            if (activeBooking) {
+              setIsBooked(true)
+              setExistingBooking(activeBooking)
+            } else {
+              setIsBooked(false)
+              setExistingBooking(null)
             }
+          } else {
+            setIsBooked(false)
+            setExistingBooking(null)
           }
+        } else {
+          // If API fails, assume not booked to allow viewing
+          setIsBooked(false)
+          setExistingBooking(null)
         }
       } catch (error) {
         console.error('Error checking booking status:', error)
+        // On error, assume not booked to allow viewing
         setIsBooked(false)
         setExistingBooking(null)
       } finally {
@@ -694,28 +700,28 @@ export function PropertyDetailPage() {
   // Listen for booking updates
   useEffect(() => {
     const handleBookingUpdate = () => {
-      if (!property) return
+      if (!property || !property.id) return
       // Re-fetch booking status when bookings are updated
       const checkBookingStatus = async () => {
         try {
-          const response = await fetch(`${BACKEND_URL}/api/bookings?propertyId=${property.id}&status=confirmed`)
+          const response = await fetch(`${BACKEND_URL}/api/bookings?propertyId=${property.id}`)
           if (response.ok) {
             const data = await response.json()
-            if (data.success && data.bookings && data.bookings.length > 0) {
-              setIsBooked(true)
-              setExistingBooking(data.bookings[0])
-            } else {
-              const pendingResponse = await fetch(`${BACKEND_URL}/api/bookings?propertyId=${property.id}&status=pending`)
-              if (pendingResponse.ok) {
-                const pendingData = await pendingResponse.json()
-                if (pendingData.success && pendingData.bookings && pendingData.bookings.length > 0) {
-                  setIsBooked(true)
-                  setExistingBooking(pendingData.bookings[0])
-                } else {
-                  setIsBooked(false)
-                  setExistingBooking(null)
-                }
+            if (data.success && data.bookings && Array.isArray(data.bookings)) {
+              const activeBooking = data.bookings.find((b: any) => 
+                b.status === 'confirmed' || b.status === 'pending'
+              )
+              
+              if (activeBooking) {
+                setIsBooked(true)
+                setExistingBooking(activeBooking)
+              } else {
+                setIsBooked(false)
+                setExistingBooking(null)
               }
+            } else {
+              setIsBooked(false)
+              setExistingBooking(null)
             }
           }
         } catch (error) {
@@ -834,7 +840,14 @@ export function PropertyDetailPage() {
           b.status === 'confirmed' || b.status === 'pending'
         )
         if (hasActiveBooking) {
-          toast.error('This property already has a pending booking. Please wait for landlord confirmation.')
+          const activeBooking = data.bookings.find((b: any) => 
+            b.status === 'confirmed' || b.status === 'pending'
+          )
+          if (activeBooking?.status === 'pending') {
+            toast.error('This property has a pending booking request. Please wait for landlord confirmation.')
+          } else {
+            toast.error('This property is already booked.')
+          }
           return
         }
       }
@@ -1121,7 +1134,21 @@ export function PropertyDetailPage() {
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 mb-6">
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
             <div className="flex items-center gap-2 mb-2 flex-wrap">
-              <span className="px-2.5 py-1 bg-button-primary/10 text-button-primary text-xs font-bold rounded-full">Available</span>
+              {isBooked ? (
+                existingBooking?.status === 'pending' ? (
+                  <span className="px-2.5 py-1 bg-yellow-100 text-yellow-700 text-xs font-bold rounded-full flex items-center gap-1">
+                    <ClockIcon className="w-3 h-3" />
+                    Pending Approval
+                  </span>
+                ) : (
+                  <span className="px-2.5 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-full flex items-center gap-1">
+                    <CheckCircleIcon className="w-3 h-3" />
+                    Booked
+                  </span>
+                )
+              ) : (
+                <span className="px-2.5 py-1 bg-button-primary/10 text-button-primary text-xs font-bold rounded-full">Available</span>
+              )}
               {property.isPremium && (
                 <span className="px-2.5 py-1 bg-yellow-400 text-white text-xs font-bold rounded-full">Premium</span>
               )}
@@ -1350,6 +1377,45 @@ export function PropertyDetailPage() {
                   <p className="text-xs text-gray-400 uppercase tracking-wider mb-0.5">Monthly Rent</p>
                   <p className="text-2xl font-black text-button-primary">रू {property.rent.toLocaleString()}</p>
                 </div>
+                
+                {/* Show booking status info if property is booked */}
+                {isBooked && existingBooking && (
+                  <div className={`mb-4 p-3 rounded-xl border-2 ${
+                    existingBooking.status === 'pending' 
+                      ? 'bg-yellow-50 border-yellow-200' 
+                      : 'bg-green-50 border-green-200'
+                  }`}>
+                    <div className="flex items-start gap-2">
+                      {existingBooking.status === 'pending' ? (
+                        <ClockIcon className="w-4 h-4 text-yellow-600 flex-shrink-0 mt-0.5" />
+                      ) : (
+                        <CheckCircleIcon className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+                      )}
+                      <div className="flex-1">
+                        <p className={`text-xs font-bold mb-1 ${
+                          existingBooking.status === 'pending' ? 'text-yellow-800' : 'text-green-800'
+                        }`}>
+                          {existingBooking.status === 'pending' ? 'Pending Approval' : 'Booked'}
+                        </p>
+                        <p className={`text-xs ${
+                          existingBooking.status === 'pending' ? 'text-yellow-700' : 'text-green-700'
+                        }`}>
+                          {existingBooking.status === 'pending' 
+                            ? 'This property has a booking request awaiting landlord confirmation.'
+                            : 'This property is currently booked.'}
+                        </p>
+                        {existingBooking.tenantName && (
+                          <p className={`text-xs mt-1 font-semibold ${
+                            existingBooking.status === 'pending' ? 'text-yellow-800' : 'text-green-800'
+                          }`}>
+                            Tenant: {existingBooking.tenantName}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
                 <motion.button
                   whileHover={{ scale: isBooked ? 1 : 1.02 }}
                   whileTap={{ scale: isBooked ? 1 : 0.97 }}
@@ -1780,4 +1846,20 @@ export function PropertyDetailPage() {
       </AnimatePresence>
     </main>
   )
+  } catch (error) {
+    console.error('Render error:', error)
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <AlertCircleIcon className="w-16 h-16 text-red-400 mx-auto mb-4" />
+          <p className="text-gray-600 mb-2">Error loading property details</p>
+          <p className="text-sm text-gray-500 mb-4">Please try refreshing the page</p>
+          <button
+            onClick={() => navigate('/properties')}
+            className="px-6 py-2.5 bg-button-primary text-white font-semibold rounded-xl"
+          >Back to Properties</button>
+        </div>
+      </div>
+    )
+  }
 }

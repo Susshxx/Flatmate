@@ -2,11 +2,12 @@ import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import {
-  GridIcon, ListIcon, FilterIcon, SparklesIcon, ArrowRightIcon,
-  MapIcon, DoorOpenIcon, HomeIcon, Building2Icon, BuildingIcon,
-  UsersIcon, InfoIcon, LightbulbIcon, SearchIcon, XIcon,
-  ChevronDownIcon, MapPinIcon, BedDoubleIcon, SlidersHorizontalIcon, CheckIcon,
-  NavigationIcon, AlertCircleIcon,
+  MapPinIcon, BedDoubleIcon, BathIcon, UtensilsIcon, HomeIcon,
+  PhoneIcon, MailIcon, MessageCircleIcon, ChevronLeftIcon,
+  ChevronRightIcon, XIcon, SendIcon, StarIcon, CheckCircleIcon,
+  CalendarIcon, CreditCardIcon, DownloadIcon, AlertCircleIcon,
+  BuildingIcon, MapIcon, HeartIcon, ShieldCheckIcon,
+  ClockIcon,
 } from 'lucide-react'
 import { PropertyCard } from '../components/PropertyCard'
 import { Button } from '../components/ui/Button'
