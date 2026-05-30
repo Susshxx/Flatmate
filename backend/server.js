@@ -185,8 +185,14 @@ app.get('/api/health', async (req, res) => {
 // Test endpoint for Google auth configuration
 app.get('/auth/test', (req, res) => {
   res.json({
-    message: 'Auth endpoints are working',
+    message: 'Auth endpoints are working - CORS configured',
     googleClientIdConfigured: !!process.env.GOOGLE_CLIENT_ID,
+    corsOrigins: [
+      'http://localhost:5173',
+      'http://localhost:3000',
+      'https://sumedha2408480-flat-mate.onrender.com',
+      'https://flatmate-cfq8.onrender.com'
+    ],
     endpoints: {
       signup: '/auth/google-signup (POST)',
       login: '/auth/google-login (POST)',
