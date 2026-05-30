@@ -68,45 +68,39 @@ connectDB();
 
 const app = express();
 
-// CORS Configuration - MUST be before any routes
-const corsOptions = {
-  origin: function (origin, callback) {
-    const allowedOrigins = [
-      'http://localhost:5173',
-      'http://localhost:3000',
-      'https://sumedha2408480-flat-mate.onrender.com',
-      'https://flatmate-cfq8.onrender.com',
-      process.env.FRONTEND_URL
-    ].filter(Boolean);
-    
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      console.log('❌ CORS blocked origin:', origin);
-      callback(null, true); // Allow anyway for now to debug
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-  exposedHeaders: ['Content-Range', 'X-Content-Range'],
-  maxAge: 86400, // 24 hours
-  preflightContinue: false,
-  optionsSuccessStatus: 204
-};
+// CORS Configuration - MUST be FIRST, before any other middleware
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'https://sumedha2408480-flat-mate.onrender.com',
+  'https://flatmate-cfq8.onrender.com',
+  process.env.FRONTEND_URL
+].filter(Boolean);
 
-app.use(cors(corsOptions));
-
-// Handle preflight requests explicitly
-app.options('*', cors(corsOptions));
-
-// Add security headers
+// Manual CORS handling for maximum control
 app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  
+  // Check if origin is allowed
+  if (!origin || allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin || '*');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+    res.setHeader('Access-Control-Expose-Headers', 'Content-Range, X-Content-Range');
+    res.setHeader('Access-Control-Max-Age', '86400');
+  }
+  
+  // Add security headers
   res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
   res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none');
+  
+  // Handle preflight OPTIONS requests
+  if (req.method === 'OPTIONS') {
+    console.log('✅ Preflight OPTIONS request from:', origin);
+    return res.status(204).end();
+  }
+  
   next();
 });
 
@@ -185,7 +179,7 @@ app.get('/api/health', async (req, res) => {
 // Test endpoint for Google auth configuration
 app.get('/auth/test', (req, res) => {
   res.json({
-    message: 'Auth endpoints are working - CORS configured',
+    message: 'Auth endpoints are working - CORS configured with manual headers',
     googleClientIdConfigured: !!process.env.GOOGLE_CLIENT_ID,
     corsOrigins: [
       'http://localhost:5173',
@@ -193,6 +187,12 @@ app.get('/auth/test', (req, res) => {
       'https://sumedha2408480-flat-mate.onrender.com',
       'https://flatmate-cfq8.onrender.com'
     ],
+    requestOrigin: req.headers.origin || 'none',
+    corsHeadersSet: {
+      'Access-Control-Allow-Origin': res.getHeader('Access-Control-Allow-Origin'),
+      'Access-Control-Allow-Methods': res.getHeader('Access-Control-Allow-Methods'),
+      'Access-Control-Allow-Headers': res.getHeader('Access-Control-Allow-Headers')
+    },
     endpoints: {
       signup: '/auth/google-signup (POST)',
       login: '/auth/google-login (POST)',
