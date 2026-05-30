@@ -52,6 +52,7 @@ import 'dotenv/config';
 
 import express from 'express';
 import cors from 'cors';
+import mongoose from 'mongoose';
 import connectDB from './config/db.js';
 import authRoutes from './routes/auth.js';
 import reviewRoutes from './routes/reviews.js'
