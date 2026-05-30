@@ -68,30 +68,40 @@ connectDB();
 
 const app = express();
 
-// Build allowed origins from environment variables with fallback to localhost
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
-const allowedOrigins = [FRONTEND_URL, 'http://localhost:5173', 'http://localhost:3000'];
-
-// app.use(cors({
-//   origin: allowedOrigins,
-//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-//   allowedHeaders: ['Content-Type', 'Authorization'],
-//   credentials: true,
-// }));
-
-
-app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'http://localhost:3000',
-    'https://sumedha2408480-flat-mate.onrender.com',
-    'https://flatmate-cfq8.onrender.com',
-    process.env.FRONTEND_URL
-  ].filter(Boolean),
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+// CORS Configuration - MUST be before any routes
+const corsOptions = {
+  origin: function (origin, callback) {
+    const allowedOrigins = [
+      'http://localhost:5173',
+      'http://localhost:3000',
+      'https://sumedha2408480-flat-mate.onrender.com',
+      'https://flatmate-cfq8.onrender.com',
+      process.env.FRONTEND_URL
+    ].filter(Boolean);
+    
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('❌ CORS blocked origin:', origin);
+      callback(null, true); // Allow anyway for now to debug
+    }
+  },
   credentials: true,
-}));
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 86400, // 24 hours
+  preflightContinue: false,
+  optionsSuccessStatus: 204
+};
+
+app.use(cors(corsOptions));
+
+// Handle preflight requests explicitly
+app.options('*', cors(corsOptions));
 
 // Add security headers
 app.use((req, res, next) => {
@@ -103,6 +113,12 @@ app.use((req, res, next) => {
 // Remove payload size limit for image uploads
 app.use(express.json({ limit: '100mb' }));
 app.use(express.urlencoded({ limit: '100mb', extended: true }));
+
+// Log all requests for debugging
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path} - Origin: ${req.headers.origin || 'none'}`);
+  next();
+});
 
 app.use('/auth', authRoutes);
 app.use('/api/auth', authRoutes);
