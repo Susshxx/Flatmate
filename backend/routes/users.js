@@ -207,10 +207,6 @@ router.get('/email/:email', async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 });
-    console.error('Error fetching user by email:', error);
-    res.status(500).json({ success: false, message: 'Server error', error: error.message });
-  }
-});
 
 // PUT /api/users/:id - Update user
 router.put('/:id', async (req, res) => {
