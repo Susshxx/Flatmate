@@ -51,7 +51,6 @@
 import 'dotenv/config';
 
 import express from 'express';
-import cors from 'cors';
 import mongoose from 'mongoose';
 import connectDB from './config/db.js';
 import authRoutes from './routes/auth.js';
@@ -64,7 +63,11 @@ import userRoutes from './routes/users.js'
 import contactRoutes from './routes/contact.js'
 import historyRoutes from './routes/history.js'
 
-connectDB();
+// Connect to database (don't exit on failure, let server start anyway)
+connectDB().catch(err => {
+  console.error('❌ MongoDB connection failed:', err.message);
+  console.log('⚠️ Server will start without database connection');
+});
 
 const app = express();
 
@@ -203,13 +206,34 @@ app.get('/auth/test', (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`
+
+// Global error handler
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error);
+  console.error('Stack:', error.stack);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+// Start server
+try {
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`
 ╔════════════════════════════════════════════════════════════╗
 ║  🚀 Server is running on port ${PORT}                        ║
 ║  📍 Health check: http://localhost:${PORT}/api/health       ║
-║  🧪 Contact test: http://localhost:${PORT}/api/contact/test-messages ║
+║  🧪 Auth test: http://localhost:${PORT}/auth/test           ║
+║  🌍 Listening on 0.0.0.0:${PORT}                            ║
 ╚════════════════════════════════════════════════════════════╝
-  `);
-});
+    `);
+    console.log('✅ Server started successfully');
+    console.log('📊 Environment:', process.env.NODE_ENV || 'development');
+    console.log('🔗 MongoDB Status:', mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected');
+  });
+} catch (error) {
+  console.error('❌ Failed to start server:', error);
+  process.exit(1);
+}
 
