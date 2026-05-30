@@ -63,12 +63,6 @@ import userRoutes from './routes/users.js'
 import contactRoutes from './routes/contact.js'
 import historyRoutes from './routes/history.js'
 
-// Connect to database (don't exit on failure, let server start anyway)
-connectDB().catch(err => {
-  console.error('❌ MongoDB connection failed:', err.message);
-  console.log('⚠️ Server will start without database connection');
-});
-
 const app = express();
 
 // CORS Configuration - MUST be FIRST, before any other middleware
@@ -77,6 +71,7 @@ const allowedOrigins = [
   'http://localhost:3000',
   'https://sumedha2408480-flat-mate.onrender.com',
   'https://flatmate-cfq8.onrender.com',
+  
   process.env.FRONTEND_URL
 ].filter(Boolean);
 
@@ -217,23 +212,45 @@ process.on('unhandledRejection', (reason, promise) => {
   console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
 });
 
-// Start server
-try {
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`
+// Start server and connect to database
+const startServer = async () => {
+  try {
+    // Connect to MongoDB first
+    console.log('🔄 Connecting to MongoDB...');
+    await connectDB();
+    console.log('✅ MongoDB connected successfully');
+    
+    // Then start the server
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`
 ╔════════════════════════════════════════════════════════════╗
 ║  🚀 Server is running on port ${PORT}                        ║
 ║  📍 Health check: http://localhost:${PORT}/api/health       ║
 ║  🧪 Auth test: http://localhost:${PORT}/auth/test           ║
 ║  🌍 Listening on 0.0.0.0:${PORT}                            ║
 ╚════════════════════════════════════════════════════════════╝
-    `);
-    console.log('✅ Server started successfully');
-    console.log('📊 Environment:', process.env.NODE_ENV || 'development');
-    console.log('🔗 MongoDB Status:', mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected');
-  });
-} catch (error) {
-  console.error('❌ Failed to start server:', error);
-  process.exit(1);
-}
+      `);
+      console.log('✅ Server started successfully');
+      console.log('📊 Environment:', process.env.NODE_ENV || 'development');
+      console.log('🔗 MongoDB Status:', mongoose.connection.readyState === 1 ? 'Connected ✅' : 'Disconnected ❌');
+    });
+  } catch (error) {
+    console.error('❌ Failed to start server:', error);
+    console.error('Stack:', error.stack);
+    
+    // Start server anyway even if DB connection fails
+    console.log('⚠️ Starting server without database connection...');
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`
+╔════════════════════════════════════════════════════════════╗
+║  ⚠️  Server running WITHOUT database connection            ║
+║  🚀 Port: ${PORT}                                           ║
+║  📍 Health check: http://localhost:${PORT}/api/health       ║
+╚════════════════════════════════════════════════════════════╝
+      `);
+    });
+  }
+};
+
+startServer();
 
